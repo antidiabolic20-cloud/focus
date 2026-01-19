@@ -141,9 +141,11 @@ export default function Home() {
                             <Zap className="w-6 h-6 text-yellow-400 fill-current" />
                         </div>
                     </div>
-                    <NeonButton variant="secondary" className="w-full mt-4 text-sm" onClick={() => { }}>
-                        View Leaderboard
-                    </NeonButton>
+                    <Link to="/leaderboard" className="w-full mt-4 block">
+                        <NeonButton variant="secondary" className="w-full text-sm">
+                            View Leaderboard
+                        </NeonButton>
+                    </Link>
                 </GlassCard>
             </div>
 
@@ -202,9 +204,9 @@ export default function Home() {
                                         <h4 className="font-medium text-sm text-white">{test.title}</h4>
                                         <p className="text-xs text-gray-400 mt-1">{test.category?.name} • {test.duration_minutes}m</p>
                                     </div>
-                                    <button className="text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary hover:text-white transition-colors">
+                                    <Link to={`/tests/${test.id}`} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary hover:text-white transition-colors">
                                         Start
-                                    </button>
+                                    </Link>
                                 </div>
                             </div>
                         ))}

@@ -7,6 +7,8 @@ import ForumList from './pages/Forum/ForumList';
 import CreatePost from './pages/Forum/CreatePost';
 import ThreadView from './pages/Forum/ThreadView';
 import TestList from './pages/MockTests/TestList';
+import TakeTest from './pages/MockTests/TakeTest';
+import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
@@ -25,6 +27,8 @@ function App() {
             <Route path="forums/create" element={<CreatePost />} />
             <Route path="forums/:id" element={<ThreadView />} />
             <Route path="tests" element={<TestList />} />
+            <Route path="tests/:id" element={<TakeTest />} />
+            <Route path="leaderboard" element={<Leaderboard />} />
             <Route path="profile" element={<Profile />} />
           </Route>
         </Routes>
