@@ -3,8 +3,8 @@ const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
 const SITE_NAME = 'Focus - Student Dashboard';
 
-// Using a reliable free model. Google's experimental flash model is often free on OpenRouter.
-const AI_MODEL = "google/gemini-2.0-flash-exp:free";
+// Using DeepSeek Free specific version as requested
+const AI_MODEL = "deepseek/deepseek-r1-0528:free";
 
 export async function generateMockTest({ subject, chapter, difficulty, count, grade }) {
     if (!OPENROUTER_API_KEY) throw new Error("OpenRouter API Key Missing. Please set VITE_OPENROUTER_API_KEY in .env");
