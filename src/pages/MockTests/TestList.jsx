@@ -2,14 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../../components/UI/GlassCard';
 import { NeonButton } from '../../components/UI/NeonButton';
 import { supabase } from '../../lib/supabase';
-import { Clock, BarChart, AlertCircle, Play } from 'lucide-react';
+import { Clock, BarChart, AlertCircle, Play, Sparkles } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '../../lib/utils';
+import { CustomTestModal } from '../../components/MockTests/CustomTestModal';
 
 export default function TestList() {
     const [tests, setTests] = useState([]);
     const [loading, setLoading] = useState(true);
     const [filter, setFilter] = useState('all');
+    const [showAIModal, setShowAIModal] = useState(false);
 
     useEffect(() => {
         fetchTests();
@@ -43,10 +45,20 @@ export default function TestList() {
     const filters = ['all', 'Easy', 'Medium', 'Hard'];
 
     return (
-        <div className="space-y-8">
-            <div>
-                <h1 className="text-3xl font-bold text-white">Mock Tests</h1>
-                <p className="text-gray-400 mt-2">Challenge yourself and track your progress.</p>
+        <div className="space-y-8 relative">
+            {showAIModal && <CustomTestModal onClose={() => setShowAIModal(false)} />}
+
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-white">Mock Tests</h1>
+                    <p className="text-gray-400 mt-2">Challenge yourself and track your progress.</p>
+                </div>
+                <NeonButton
+                    onClick={() => setShowAIModal(true)}
+                    className="bg-gradient-to-r from-pink-500 to-violet-600 border-none text-white shadow-lg hover:shadow-pink-500/25"
+                >
+                    <Sparkles className="w-5 h-5 mr-2 animate-pulse" /> AI Test Generator
+                </NeonButton>
             </div>
 
             {/* Filters */}
