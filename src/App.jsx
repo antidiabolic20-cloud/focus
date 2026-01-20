@@ -16,30 +16,34 @@ import Messages from './pages/Messages/Messages';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 
+import { ThemeProvider } from './context/ThemeContext';
+
 function App() {
   return (
-    <AuthProvider>
-      <BrowserRouter>
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/register" element={<Register />} />
+    <ThemeProvider>
+      <AuthProvider>
+        <BrowserRouter>
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/register" element={<Register />} />
 
-          <Route path="/" element={<DashboardLayout />}>
-            <Route index element={<Home />} />
-            <Route path="forums" element={<ForumList />} />
-            <Route path="forums/create" element={<CreatePost />} />
-            <Route path="forums/:id" element={<ThreadView />} />
-            <Route path="groups" element={<GroupList />} />
-            <Route path="groups/:id" element={<GroupDetail />} />
-            <Route path="messages" element={<Messages />} />
-            <Route path="tests" element={<TestList />} />
-            <Route path="tests/:id" element={<TakeTest />} />
-            <Route path="leaderboard" element={<Leaderboard />} />
-            <Route path="profile" element={<Profile />} />
-          </Route>
-        </Routes>
-      </BrowserRouter>
-    </AuthProvider>
+            <Route path="/" element={<DashboardLayout />}>
+              <Route index element={<Home />} />
+              <Route path="forums" element={<ForumList />} />
+              <Route path="forums/create" element={<CreatePost />} />
+              <Route path="forums/:id" element={<ThreadView />} />
+              <Route path="groups" element={<GroupList />} />
+              <Route path="groups/:id" element={<GroupDetail />} />
+              <Route path="messages" element={<Messages />} />
+              <Route path="tests" element={<TestList />} />
+              <Route path="tests/:id" element={<TakeTest />} />
+              <Route path="leaderboard" element={<Leaderboard />} />
+              <Route path="profile" element={<Profile />} />
+            </Route>
+          </Routes>
+        </BrowserRouter>
+      </AuthProvider>
+    </ThemeProvider>
   );
 }
 

@@ -90,7 +90,7 @@ export default function Home() {
             {/* Welcome Section */}
             <div className="flex justify-between items-end">
                 <div>
-                    <h1 className="text-3xl font-bold text-white">
+                    <h1 className="text-3xl font-bold text-[rgb(var(--text-main))]">
                         Hello, {profile?.username || 'Student'} 👋
                     </h1>
                     <p className="text-gray-400 mt-2">Ready to crush your goals today?</p>
@@ -110,7 +110,7 @@ export default function Home() {
                     </div>
                     <h3 className="text-gray-400 font-medium">Average Score</h3>
                     <div className="mt-4">
-                        <span className="text-4xl font-bold text-white">{stats.avgScore}%</span>
+                        <span className="text-4xl font-bold text-[rgb(var(--text-main))]">{stats.avgScore}%</span>
                         <span className="text-gray-500 text-sm ml-2">in {stats.totalTests} tests</span>
                     </div>
                     <div className="w-full bg-gray-800 h-1.5 rounded-full mt-4 overflow-hidden">
@@ -127,7 +127,7 @@ export default function Home() {
                     </div>
                     <h3 className="text-gray-400 font-medium">Global Rank</h3>
                     <div className="mt-4">
-                        <span className="text-4xl font-bold text-white">#{stats.rank}</span>
+                        <span className="text-4xl font-bold text-[rgb(var(--text-main))]">#{stats.rank}</span>
                         <span className="text-gray-500 text-sm ml-2">by XP</span>
                     </div>
                     <p className="text-xs text-gray-400 mt-4">{user ? "Keep learning to improve!" : "Log in to see rank"}</p>
@@ -135,7 +135,7 @@ export default function Home() {
 
                 <GlassCard className="flex flex-col justify-between bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
                     <div>
-                        <h3 className="text-white font-medium">Total XP</h3>
+                        <h3 className="text-[rgb(var(--text-main))] font-medium">Total XP</h3>
                         <div className="flex items-center gap-2 mt-2">
                             <span className="text-3xl font-bold text-primary-glow">{profile?.xp || 0}</span>
                             <Zap className="w-6 h-6 text-yellow-400 fill-current" />
@@ -154,7 +154,7 @@ export default function Home() {
                 {/* Left Column (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-white">Popular Discussions</h2>
+                        <h2 className="text-xl font-bold text-[rgb(var(--text-main))]">Popular Discussions</h2>
                         <Link to="/forums" className="text-sm text-primary hover:text-primary-glow transition-colors">View All</Link>
                     </div>
                     <div className="space-y-4">
@@ -170,7 +170,7 @@ export default function Home() {
                                             <MessageSquare className="w-5 h-5" />
                                         </div>
                                         <div>
-                                            <h4 className="font-medium text-white group-hover:text-primary transition-colors">{topic.title}</h4>
+                                            <h4 className="font-medium text-[rgb(var(--text-main))] group-hover:text-primary transition-colors">{topic.title}</h4>
                                             <span className={cn(
                                                 "text-xs px-2 py-0.5 rounded-full border bg-white/5 mt-1 inline-block",
                                                 "text-primary border-primary/20"
@@ -192,7 +192,7 @@ export default function Home() {
                 {/* Right Column (1/3) */}
                 <div className="space-y-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-white">Available Tests</h2>
+                        <h2 className="text-xl font-bold text-[rgb(var(--text-main))]">Available Tests</h2>
                     </div>
                     <GlassCard className="space-y-4">
                         {upcomingTests.length === 0 ? (
@@ -201,7 +201,7 @@ export default function Home() {
                             <div key={index} className="p-3 rounded-lg bg-background-lighter border border-glass-border hover:border-primary/30 transition-colors">
                                 <div className="flex justify-between items-start">
                                     <div>
-                                        <h4 className="font-medium text-sm text-white">{test.title}</h4>
+                                        <h4 className="font-medium text-sm text-[rgb(var(--text-main))]">{test.title}</h4>
                                         <p className="text-xs text-gray-400 mt-1">{test.category?.name} • {test.duration_minutes}m</p>
                                     </div>
                                     <Link to={`/tests/${test.id}`} className="text-xs bg-primary/10 text-primary px-2 py-1 rounded hover:bg-primary hover:text-white transition-colors">
@@ -210,7 +210,7 @@ export default function Home() {
                                 </div>
                             </div>
                         ))}
-                        <Link to="/tests" className="block w-full text-center text-sm text-gray-400 hover:text-white mt-2">
+                        <Link to="/tests" className="block w-full text-center text-sm text-gray-400 hover:text-[rgb(var(--text-main))] mt-2">
                             View All Tests
                         </Link>
                     </GlassCard>

@@ -21,6 +21,12 @@ export default function Messages() {
 
     const messagesEndRef = useRef(null);
 
+    const activeConvIdRef = useRef(activeConvId);
+
+    useEffect(() => {
+        activeConvIdRef.current = activeConvId;
+    }, [activeConvId]);
+
     useEffect(() => {
         if (user) fetchConversations();
 
@@ -55,10 +61,39 @@ export default function Messages() {
     };
 
     async function handleRealtimeMessage(msg) {
-        if (activeConvId && msg.conversation_id === activeConvId) {
-            fetchMessages(msg.conversation_id);
+        // Use ref to check current active conversation without stale closure
+        if (activeConvIdRef.current && msg.conversation_id === activeConvIdRef.current) {
+            setMessages(prev => {
+                const exists = prev.find(m => m.id === msg.id);
+                if (exists) return prev;
+                return [...prev, msg];
+            });
+            // Mark as read if we are looking at this conversation
+            if (msg.sender_id !== user.id) {
+                markAsRead(activeConvIdRef.current);
+            }
         }
-        fetchConversations();
+
+        // Update the conversation's last_message_at in the list
+        setConversations(prev => {
+            let convFound = false;
+            const updated = prev.map(c => {
+                if (c.id === msg.conversation_id) {
+                    convFound = true;
+                    return { ...c, last_message_at: msg.created_at };
+                }
+                return c;
+            });
+
+            if (convFound) {
+                return updated.sort((a, b) => new Date(b.last_message_at) - new Date(a.last_message_at));
+            } else {
+                // If it's a new conversation, we might need to fetch it or ignoring it until refresh
+                // For now just return updated to be safe, but ideally we should fetch the new conv if not found
+                // We'll leave that for a more robust refactor if needed.
+                return updated;
+            }
+        });
     }
 
     async function fetchConversations() {
@@ -108,19 +143,48 @@ export default function Messages() {
         e.preventDefault();
         if (!newMessage.trim() || !activeConvId) return;
 
-        try {
-            const content = newMessage;
-            setNewMessage('');
+        const content = newMessage;
+        const tempId = `temp-${Date.now()}`;
+        const optimisticMsg = {
+            id: tempId,
+            conversation_id: activeConvId,
+            sender_id: user.id,
+            content: content,
+            created_at: new Date().toISOString(),
+            is_optimistic: true // Flag to identify temp messages
+        };
 
-            const { error } = await supabase
+        try {
+            setNewMessage('');
+            // Optimistic Update
+            setMessages(prev => [...prev, optimisticMsg]);
+
+            // Update conversation list order optimistically
+            setConversations(prev => {
+                return prev.map(c => {
+                    if (c.id === activeConvId) {
+                        return { ...c, last_message_at: optimisticMsg.created_at };
+                    }
+                    return c;
+                }).sort((a, b) => new Date(b.last_message_at) - new Date(a.last_message_at));
+            });
+
+            const { data, error } = await supabase
                 .from('direct_messages')
                 .insert({
                     conversation_id: activeConvId,
                     sender_id: user.id,
                     content
-                });
+                })
+                .select()
+                .single();
 
             if (error) throw error;
+
+            // Replace optimistic message with real one
+            if (data) {
+                setMessages(prev => prev.map(m => m.id === tempId ? data : m));
+            }
 
             await supabase
                 .from('conversations')
@@ -129,6 +193,9 @@ export default function Messages() {
 
         } catch (err) {
             console.error(err);
+            // Revert optimistic update on error
+            setMessages(prev => prev.filter(m => m.id !== tempId));
+            alert("Failed to send message");
         }
     }
 
@@ -212,7 +279,7 @@ export default function Messages() {
                             </div>
                             <div className="flex-1 min-w-0">
                                 <div className="flex justify-between items-baseline">
-                                    <h4 className="text-white font-medium truncate">{c.otherUser.username}</h4>
+                                    <h4 className="text-[rgb(var(--text-main))] font-medium truncate">{c.otherUser.username}</h4>
                                     <span className="text-[10px] text-gray-500">
                                         {new Date(c.last_message_at).toLocaleDateString()}
                                     </span>
@@ -235,120 +302,127 @@ export default function Messages() {
                         </div>
                     )}
                 </div>
-            </GlassCard>
+            </GlassCard >
 
             {/* Chat Area */}
-            <GlassCard className={cn(
-                "flex-1 flex flex-col p-0 overflow-hidden relative",
-                !activeConvId && "hidden md:flex"
-            )}>
-                {activeConvId ? (
-                    <>
-                        {/* Header */}
-                        <div className="p-3 md:p-4 border-b border-glass-border bg-background/50 backdrop-blur-md flex items-center gap-3">
-                            <button
-                                onClick={() => setActiveConvId(null)}
-                                className="p-2 -ml-2 text-gray-400 hover:text-white md:hidden"
-                            >
-                                <ChevronLeft className="w-6 h-6" />
-                            </button>
-                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                                {conversations.find(c => c.id === activeConvId)?.otherUser.username[0].toUpperCase()}
-                            </div>
-                            <div className="min-w-0">
-                                <h3 className="text-white font-bold flex items-center gap-2 truncate">
-                                    {conversations.find(c => c.id === activeConvId)?.otherUser.username}
-                                    <span className="hidden sm:inline">
-                                        <UserBadge badges={conversations.find(c => c.id === activeConvId)?.otherUser.badges} />
-                                    </span>
-                                </h3>
-                            </div>
-                        </div>
-
-                        {/* Messages */}
-                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
-                            {messages.map((msg, i) => {
-                                const isMe = msg.sender_id === user.id;
-                                return (
-                                    <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
-                                        <div className={cn(
-                                            "max-w-[85%] md:max-w-[70%] px-4 py-2 rounded-2xl text-sm",
-                                            isMe ? "bg-primary text-white rounded-tr-none" : "bg-background-lighter border border-glass-border text-gray-200 rounded-tl-none"
-                                        )}>
-                                            {msg.content}
-                                            <div className={cn("text-[9px] mt-1 text-right opacity-70", isMe ? "text-white" : "text-gray-500")}>
-                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                                            </div>
-                                        </div>
-                                    </div>
-                                )
-                            })}
-                            <div ref={messagesEndRef} />
-                        </div>
-
-                        {/* Input */}
-                        <form onSubmit={sendMessage} className="p-3 md:p-4 border-t border-glass-border bg-background/50">
-                            <div className="flex gap-2">
-                                <input
-                                    className="flex-1 bg-background-lighter border border-glass-border rounded-xl px-4 py-2 text-sm text-white focus:outline-none focus:border-primary"
-                                    placeholder="Type a message..."
-                                    value={newMessage}
-                                    onChange={(e) => setNewMessage(e.target.value)}
-                                />
-                                <button disabled={!newMessage.trim()} type="submit" className="p-2 md:p-3 bg-primary rounded-xl text-white hover:bg-primary-glow transition-all disabled:opacity-50">
-                                    <Send className="w-5 h-5" />
+            < GlassCard className={
+                cn(
+                    "flex-1 flex flex-col p-0 overflow-hidden relative",
+                    !activeConvId && "hidden md:flex"
+                )
+            }>
+                {
+                    activeConvId ? (
+                        <>
+                            {/* Header */}
+                            < div className="p-3 md:p-4 border-b border-glass-border bg-background/50 backdrop-blur-md flex items-center gap-3" >
+                                <button
+                                    onClick={() => setActiveConvId(null)}
+                                    className="p-2 -ml-2 text-gray-400 hover:text-[rgb(var(--text-main))] md:hidden"
+                                >
+                                    <ChevronLeft className="w-6 h-6" />
                                 </button>
-                            </div>
-                        </form>
-                    </>
-                ) : (
-                    <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
-                        <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
-                        <p>Select a conversation to start chatting</p>
-                    </div>
-                )}
-            </GlassCard>
+                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                                    {conversations.find(c => c.id === activeConvId)?.otherUser.username[0].toUpperCase()}
+                                </div>
+                                <div className="min-w-0">
+                                    <h3 className="text-[rgb(var(--text-main))] font-bold flex items-center gap-2 truncate">
+                                        {conversations.find(c => c.id === activeConvId)?.otherUser.username}
+                                        <span className="hidden sm:inline">
+                                            <UserBadge badges={conversations.find(c => c.id === activeConvId)?.otherUser.badges} />
+                                        </span>
+                                    </h3>
+                                </div>
+                            </div >
+
+                            {/* Messages */}
+                            < div className="flex-1 overflow-y-auto p-4 space-y-3" >
+                                {
+                                    messages.map((msg, i) => {
+                                        const isMe = msg.sender_id === user.id;
+                                        return (
+                                            <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+                                                <div className={cn(
+                                                    "max-w-[85%] md:max-w-[70%] px-4 py-2 rounded-2xl text-sm",
+                                                    isMe ? "bg-primary text-white rounded-tr-none" : "bg-background-lighter border border-glass-border text-[rgb(var(--text-main))] rounded-tl-none"
+                                                )}>
+                                                    {msg.content}
+                                                    <div className={cn("text-[9px] mt-1 text-right opacity-70", isMe ? "text-white" : "text-gray-500")}>
+                                                        {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        )
+                                    })
+                                }
+                                < div ref={messagesEndRef} />
+                            </div >
+
+                            {/* Input */}
+                            < form onSubmit={sendMessage} className="p-3 md:p-4 border-t border-glass-border bg-background/50" >
+                                <div className="flex gap-2">
+                                    <input
+                                        className="flex-1 bg-background-lighter border border-glass-border rounded-xl px-4 py-2 text-sm text-[rgb(var(--text-main))] focus:outline-none focus:border-primary"
+                                        placeholder="Type a message..."
+                                        value={newMessage}
+                                        onChange={(e) => setNewMessage(e.target.value)}
+                                    />
+                                    <button disabled={!newMessage.trim()} type="submit" className="p-2 md:p-3 bg-primary rounded-xl text-white hover:bg-primary-glow transition-all disabled:opacity-50">
+                                        <Send className="w-5 h-5" />
+                                    </button>
+                                </div>
+                            </form >
+                        </>
+                    ) : (
+                        <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
+                            <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
+                            <p>Select a conversation to start chatting</p>
+                        </div>
+                    )}
+            </GlassCard >
 
             {/* New Chat Modal */}
-            {showNewChat && (
-                <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
-                    <GlassCard className="w-full max-w-md p-6 bg-background">
-                        <h3 className="text-xl font-bold text-white mb-4">New Message</h3>
-                        <div className="relative mb-4">
-                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
-                            <input
-                                className="w-full bg-background-lighter border border-glass-border rounded-lg pl-9 pr-4 py-2 text-white focus:outline-none focus:border-primary"
-                                placeholder="Search users..."
-                                value={searchTerm}
-                                onChange={(e) => searchUsers(e.target.value)}
-                                autoFocus
-                            />
-                        </div>
-                        <div className="space-y-2 max-h-60 overflow-y-auto">
-                            {searchResults.map(u => (
-                                <button
-                                    key={u.id}
-                                    onClick={() => startConversation(u)}
-                                    className="w-full text-left p-3 rounded-lg hover:bg-white/10 flex items-center gap-3 transition-colors text-gray-300 hover:text-white"
-                                >
-                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
-                                        {u.username[0].toUpperCase()}
-                                    </div>
-                                    <span className="truncate flex-1">{u.username}</span>
-                                    {u.badges && u.badges.length > 0 && (
-                                        <span className="text-[10px] text-yellow-400 border border-yellow-500/30 px-1.5 rounded-full">
-                                            {u.badges[0]}
-                                        </span>
-                                    )}
-                                </button>
-                            ))}
-                        </div>
-                        <div className="flex justify-end mt-4">
-                            <button onClick={() => setShowNewChat(false)} className="text-gray-400 hover:text-white">Cancel</button>
-                        </div>
-                    </GlassCard>
-                </div>
-            )}
-        </div>
+            {
+                showNewChat && (
+                    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                        <GlassCard className="w-full max-w-md p-6 bg-background">
+                            <h3 className="text-xl font-bold text-[rgb(var(--text-main))] mb-4">New Message</h3>
+                            <div className="relative mb-4">
+                                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                                <input
+                                    className="w-full bg-background-lighter border border-glass-border rounded-lg pl-9 pr-4 py-2 text-[rgb(var(--text-main))] focus:outline-none focus:border-primary"
+                                    placeholder="Search users..."
+                                    value={searchTerm}
+                                    onChange={(e) => searchUsers(e.target.value)}
+                                    autoFocus
+                                />
+                            </div>
+                            <div className="space-y-2 max-h-60 overflow-y-auto">
+                                {searchResults.map(u => (
+                                    <button
+                                        key={u.id}
+                                        onClick={() => startConversation(u)}
+                                        className="w-full text-left p-3 rounded-lg hover:bg-white/10 flex items-center gap-3 transition-colors text-gray-300 hover:text-[rgb(var(--text-white))]"
+                                    >
+                                        <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold flex-shrink-0">
+                                            {u.username[0].toUpperCase()}
+                                        </div>
+                                        <span className="truncate flex-1 text-[rgb(var(--text-main))]">{u.username}</span>
+                                        {u.badges && u.badges.length > 0 && (
+                                            <span className="text-[10px] text-yellow-400 border border-yellow-500/30 px-1.5 rounded-full">
+                                                {u.badges[0]}
+                                            </span>
+                                        )}
+                                    </button>
+                                ))}
+                            </div>
+                            <div className="flex justify-end mt-4">
+                                <button onClick={() => setShowNewChat(false)} className="text-gray-400 hover:text-[rgb(var(--text-main))]">Cancel</button>
+                            </div>
+                        </GlassCard>
+                    </div>
+                )
+            }
+        </div >
     );
 }

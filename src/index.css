@@ -5,8 +5,39 @@
 @tailwind utilities;
 
 @layer base {
+  :root {
+    /* Light Mode */
+    --background: 240 242 245;
+    /* Light Gray #F0F2F5 */
+    --background-lighter: 255 255 255;
+    /* White */
+    --primary: 124 58 237;
+    /* Violet 600 */
+    --primary-glow: 139 92 246;
+    /* Violet 500 */
+    --glass: rgba(0, 0, 0, 0.05);
+    --glass-border: rgba(0, 0, 0, 0.1);
+    --text-main: 17 24 39;
+    /* Gray 900 */
+  }
+
+  .dark {
+    /* Dark Mode */
+    --background: 11 12 21;
+    /* #0B0C15 */
+    --background-lighter: 21 22 33;
+    /* #151621 */
+    --primary: 139 92 246;
+    /* Violet 500 */
+    --primary-glow: 167 139 250;
+    /* Violet 400 */
+    --glass: rgba(255, 255, 255, 0.05);
+    --glass-border: rgba(255, 255, 255, 0.1);
+    --text-main: 255 255 255;
+  }
+
   body {
-    @apply bg-background text-white font-sans antialiased;
+    @apply bg-background text-[rgb(var(--text-main))] font-sans antialiased transition-colors duration-300;
   }
 }
 
@@ -14,7 +45,7 @@
   .glass-panel {
     @apply bg-glass backdrop-blur-md border border-glass-border;
   }
-  
+
   .text-glow-purple {
     text-shadow: 0 0 10px rgba(139, 92, 246, 0.5);
   }

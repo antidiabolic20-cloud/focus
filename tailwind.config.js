@@ -4,16 +4,17 @@ export default {
         "./index.html",
         "./src/**/*.{js,ts,jsx,tsx}",
     ],
+    darkMode: 'class',
     theme: {
         extend: {
             colors: {
                 background: {
-                    DEFAULT: '#0B0C15', // Deep void
-                    lighter: '#151621',
+                    DEFAULT: 'rgb(var(--background) / <alpha-value>)',
+                    lighter: 'rgb(var(--background-lighter) / <alpha-value>)',
                 },
                 primary: {
-                    DEFAULT: '#8B5CF6', // Violet 500
-                    glow: '#A78BFA',    // Violet 400
+                    DEFAULT: 'rgb(var(--primary) / <alpha-value>)',
+                    glow: 'rgb(var(--primary-glow) / <alpha-value>)',
                 },
                 secondary: {
                     DEFAULT: '#3B82F6', // Blue 500
@@ -24,8 +25,8 @@ export default {
                     glow: '#F472B6',    // Pink 400
                 },
                 glass: {
-                    DEFAULT: 'rgba(255, 255, 255, 0.05)',
-                    border: 'rgba(255, 255, 255, 0.1)',
+                    DEFAULT: 'var(--glass)',
+                    border: 'var(--glass-border)',
                 }
             },
             fontFamily: {

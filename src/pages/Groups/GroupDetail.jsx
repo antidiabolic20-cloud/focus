@@ -51,6 +51,13 @@ export default function GroupDetail() {
     };
 
     async function fetchNewMessageWithAuthor(msgId) {
+        // First check if we already have it (optimistic)
+        setMessages(prev => {
+            const exists = prev.find(m => m.id === msgId);
+            if (exists) return prev;
+            return prev; // We still need to fetch details for others
+        });
+
         const { data } = await supabase
             .from('group_messages')
             .select(`
@@ -61,7 +68,22 @@ export default function GroupDetail() {
             .single();
 
         if (data) {
-            setMessages(prev => [...prev, data]);
+            setMessages(prev => {
+                // Check again to avoid race conditions with optimistic updates
+                const exists = prev.find(m => m.id === data.id);
+                if (exists) {
+                    // Update existing optimistic message with real data (like created_at from server)
+                    return prev.map(m => m.id === data.id ? data : m);
+                }
+
+                // Also check if we have a temporary message that matches this content and author
+                const tempMatch = prev.find(m => m.is_optimistic && m.content === data.content && m.author_id === data.author_id);
+                if (tempMatch) {
+                    return prev.map(m => m.id === tempMatch.id ? data : m);
+                }
+
+                return [...prev, data];
+            });
         }
     }
 
@@ -104,21 +126,52 @@ export default function GroupDetail() {
         e.preventDefault();
         if (!newMessage.trim()) return;
 
-        try {
-            const content = newMessage;
-            setNewMessage(''); // Optimistic clear
+        const content = newMessage;
+        const tempId = `temp-${Date.now()}`;
 
-            const { error } = await supabase
+        // Find current user profile for optimistic state
+        // We can get it from the first message author details or assume simple user object
+        const authorInfo = messages.find(m => m.author_id === user.id)?.author || {
+            username: user.email.split('@')[0], // Fallback
+            avatar_url: null,
+            badges: []
+        };
+
+        const optimisticMsg = {
+            id: tempId,
+            group_id: id,
+            content: content,
+            author_id: user.id,
+            author: authorInfo,
+            created_at: new Date().toISOString(),
+            is_optimistic: true
+        };
+
+        try {
+            setNewMessage(''); // Optimistic clear
+            setMessages(prev => [...prev, optimisticMsg]);
+
+            const { data, error } = await supabase
                 .from('group_messages')
                 .insert({
                     group_id: id,
                     content: content,
                     author_id: user.id
-                });
+                })
+                .select(`
+                    *,
+                    author:profiles(username, avatar_url, badges)
+                `)
+                .single();
 
             if (error) throw error;
+
+            if (data) {
+                setMessages(prev => prev.map(m => m.id === tempId ? data : m));
+            }
         } catch (err) {
             console.error(err);
+            setMessages(prev => prev.filter(m => m.id !== tempId));
             alert("Failed to send message");
         }
     }
