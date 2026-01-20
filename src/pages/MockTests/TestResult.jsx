@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { GlassCard } from '../../components/UI/GlassCard';
 import { NeonButton } from '../../components/UI/NeonButton';
-import { CheckCircle, XCircle, AlertTriangle, ChevronRight, Trophy, Target, Zap } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, ChevronRight, Trophy, Target, Zap, Clock } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { cn } from '../../lib/utils';
 import { useWindowSize } from 'react-use'; // Just in case, but we can standard window.innerWidth
