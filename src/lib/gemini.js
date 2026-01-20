@@ -1,6 +1,6 @@
 
 const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY;
-const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent";
+const API_URL = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent";
 
 export async function generateMockTest({ subject, chapter, difficulty, count, grade }) {
     if (!GEMINI_API_KEY) throw new Error("Google Gemini API Key Missing. Please set VITE_GEMINI_API_KEY in .env");
