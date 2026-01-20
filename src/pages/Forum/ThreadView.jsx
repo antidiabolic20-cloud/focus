@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { supabase } from '../../lib/supabase';
 import { MessageSquare, Clock, User, Send } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { UserBadge } from '../../components/UI/UserBadge';
 
 export default function ThreadView() {
     const { id } = useParams();
@@ -28,7 +29,7 @@ export default function ThreadView() {
             // Fetch Thread
             const { data: threadData, error: threadError } = await supabase
                 .from('threads')
-                .select(`*, author:profiles(username, avatar_url, level), category:categories(name, color)`)
+                .select(`*, author:profiles(username, avatar_url, level, badges), category:categories(name, color)`)
                 .eq('id', id)
                 .single();
 
@@ -36,8 +37,7 @@ export default function ThreadView() {
             setThread(threadData);
 
             // Increment views
-            await supabase.rpc('increment_view', { row_id: id }); // Need RPC or simple update
-            // Simple update approach for now
+            await supabase.rpc('increment_view', { row_id: id });
             await supabase.from('threads').update({ views: (threadData.views || 0) + 1 }).eq('id', id);
 
             // Fetch Comments
@@ -54,7 +54,7 @@ export default function ThreadView() {
     async function fetchComments() {
         const { data } = await supabase
             .from('comments')
-            .select(`*, author:profiles(username, avatar_url)`)
+            .select(`*, author:profiles(username, avatar_url, badges)`)
             .eq('thread_id', id)
             .order('created_at', { ascending: true });
 
@@ -118,7 +118,10 @@ export default function ThreadView() {
                             </div>
                         </div>
                         <div>
-                            <p className="text-sm font-medium text-white">{thread.author?.username}</p>
+                            <div className="flex items-center gap-2">
+                                <p className="text-sm font-medium text-white">{thread.author?.username}</p>
+                                <UserBadge badges={thread.author?.badges} />
+                            </div>
                             <p className="text-xs text-primary">Level {thread.author?.level || 1}</p>
                         </div>
                     </div>
@@ -152,7 +155,10 @@ export default function ThreadView() {
                                 </div>
                                 <div className="flex-1">
                                     <div className="flex items-baseline justify-between mb-2">
-                                        <span className="font-medium text-white text-sm">{comment.author?.username}</span>
+                                        <div className="flex items-center gap-2">
+                                            <span className="font-medium text-white text-sm">{comment.author?.username}</span>
+                                            <UserBadge badges={comment.author?.badges} />
+                                        </div>
                                         <span className="text-xs text-gray-500">{new Date(comment.created_at).toLocaleDateString()}</span>
                                     </div>
                                     <p className="text-gray-300 text-sm whitespace-pre-wrap">{comment.body}</p>

@@ -5,6 +5,7 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { Send, Users, Shield, Copy, Check } from 'lucide-react';
 import { cn } from '../../lib/utils';
+import { UserBadge } from '../../components/UI/UserBadge';
 
 export default function GroupDetail() {
     const { id } = useParams();
@@ -54,7 +55,7 @@ export default function GroupDetail() {
             .from('group_messages')
             .select(`
                 *,
-                author:profiles(username, avatar_url)
+                author:profiles(username, avatar_url, badges)
             `)
             .eq('id', msgId)
             .single();
@@ -83,7 +84,7 @@ export default function GroupDetail() {
                 .from('group_messages')
                 .select(`
                     *,
-                    author:profiles(username, avatar_url)
+                    author:profiles(username, avatar_url, badges)
                 `)
                 .eq('group_id', id)
                 .order('created_at', { ascending: true });
@@ -171,7 +172,10 @@ export default function GroupDetail() {
                             return (
                                 <div key={msg.id} className={cn("flex flex-col", isMe ? "items-end" : "items-start")}>
                                     {showHeader && (
-                                        <span className="text-xs text-gray-500 mb-1 ml-1">{msg.author?.username || 'Unknown'}</span>
+                                        <div className="flex items-center gap-2 mb-1 ml-1">
+                                            <span className="text-xs text-gray-500">{msg.author?.username || 'Unknown'}</span>
+                                            <UserBadge badges={msg.author?.badges} />
+                                        </div>
                                     )}
                                     <div
                                         className={cn(

@@ -1,6 +1,6 @@
 import React from 'react';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
@@ -17,6 +17,7 @@ export function Sidebar() {
         { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
         { icon: MessageSquare, label: 'Forums', path: '/forums' },
         { icon: Users, label: 'Groups', path: '/groups' },
+        { icon: Mail, label: 'Messages', path: '/messages' },
         { icon: FileText, label: 'Mock Tests', path: '/tests' },
         { icon: User, label: 'Profile', path: '/profile' },
     ];

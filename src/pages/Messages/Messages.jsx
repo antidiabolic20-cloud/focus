@@ -1,0 +1,360 @@
+import React, { useState, useEffect, useRef } from 'react';
+import { GlassCard } from '../../components/UI/GlassCard';
+import { supabase } from '../../lib/supabase';
+import { useAuth } from '../../context/AuthContext';
+import { Send, Plus, Search, MessageSquare } from 'lucide-react';
+import { cn } from '../../lib/utils';
+import { UserBadge } from '../../components/UI/UserBadge';
+
+export default function Messages() {
+    const { user } = useAuth();
+    const [conversations, setConversations] = useState([]);
+    const [activeConvId, setActiveConvId] = useState(null);
+    const [messages, setMessages] = useState([]);
+    const [newMessage, setNewMessage] = useState('');
+    const [loading, setLoading] = useState(true);
+
+    // New Chat State
+    const [showNewChat, setShowNewChat] = useState(false);
+    const [searchTerm, setSearchTerm] = useState('');
+    const [searchResults, setSearchResults] = useState([]);
+
+    const messagesEndRef = useRef(null);
+
+    useEffect(() => {
+        if (user) fetchConversations();
+
+        // Subscribe to new messages for the user
+        const channel = supabase
+            .channel(`public:direct_messages`)
+            .on('postgres_changes', {
+                event: 'INSERT',
+                schema: 'public',
+                table: 'direct_messages'
+            }, (payload) => {
+                // Determine if this message belongs to one of our conversations
+                // Ideally, we'd check if payload.new.conversation_id is in our list
+                // For simplicity, just refresh list or if active, append.
+                handleRealtimeMessage(payload.new);
+            })
+            .subscribe();
+
+        return () => { supabase.removeChannel(channel); };
+    }, [user]);
+
+    useEffect(() => {
+        if (activeConvId) {
+            fetchMessages(activeConvId);
+            markAsRead(activeConvId);
+        }
+    }, [activeConvId]);
+
+    useEffect(() => {
+        scrollToBottom();
+    }, [messages]);
+
+    const scrollToBottom = () => {
+        messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    async function handleRealtimeMessage(msg) {
+        // If it's for the active conversation, append it
+        if (activeConvId && msg.conversation_id === activeConvId) {
+            // Need to fetch author details normally, but here we can cheat if we know it's us or them
+            // Better to just refresh messages or have minimal display
+            fetchMessages(msg.conversation_id);
+        }
+        fetchConversations(); // Update "Last message" preview
+    }
+
+    async function fetchConversations() {
+        try {
+            // Fetch conversations where user is user1 or user2
+            // Currently supabase doesn't support easy OR logic in JS client for complex joins easily?
+            // Actually .or() works.
+
+            const { data, error } = await supabase
+                .from('conversations')
+                .select(`
+                    id, last_message_at,
+                    user1:profiles!user1_id(id, username, avatar_url, badges),
+                    user2:profiles!user2_id(id, username, avatar_url, badges)
+                `)
+                .or(`user1_id.eq.${user.id},user2_id.eq.${user.id}`)
+                .order('last_message_at', { ascending: false });
+
+            if (error) throw error;
+
+            // Format data to get "other user"
+            const formatted = data.map(c => {
+                const other = c.user1.id === user.id ? c.user2 : c.user1;
+                return { ...c, otherUser: other };
+            });
+
+            setConversations(formatted);
+            setLoading(false);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function fetchMessages(convId) {
+        const { data } = await supabase
+            .from('direct_messages')
+            .select('*')
+            .eq('conversation_id', convId)
+            .order('created_at', { ascending: true });
+        setMessages(data || []);
+    }
+
+    async function markAsRead(convId) {
+        await supabase
+            .from('direct_messages')
+            .update({ is_read: true })
+            .eq('conversation_id', convId)
+            .neq('sender_id', user.id);
+    }
+
+    async function sendMessage(e) {
+        e.preventDefault();
+        if (!newMessage.trim() || !activeConvId) return;
+
+        try {
+            const content = newMessage;
+            setNewMessage('');
+
+            const { error } = await supabase
+                .from('direct_messages')
+                .insert({
+                    conversation_id: activeConvId,
+                    sender_id: user.id,
+                    content
+                });
+
+            if (error) throw error;
+
+            // Update conversation timestamp
+            await supabase
+                .from('conversations')
+                .update({ last_message_at: new Date().toISOString() })
+                .eq('id', activeConvId);
+
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function searchUsers(q) {
+        setSearchTerm(q);
+        if (q.length < 2) {
+            setSearchResults([]);
+            return;
+        }
+
+        const { data } = await supabase
+            .from('profiles')
+            .select('id, username, avatar_url, badges')
+            .ilike('username', `%${q}%`)
+            .neq('id', user.id)
+            .limit(5);
+
+        setSearchResults(data || []);
+    }
+
+    async function startConversation(otherUser) {
+        // Check if conversation exists
+        // We need to check both (me, them) and (them, me)
+        // Or strictly sort IDs. Let's rely on finding it.
+
+        let convId;
+        const exists = conversations.find(c => c.otherUser.id === otherUser.id);
+
+        if (exists) {
+            convId = exists.id;
+        } else {
+            // Create new
+            const id1 = user.id < otherUser.id ? user.id : otherUser.id;
+            const id2 = user.id < otherUser.id ? otherUser.id : user.id;
+
+            const { data, error } = await supabase
+                .from('conversations')
+                .insert({ user1_id: id1, user2_id: id2 })
+                .select()
+                .single();
+
+            if (error && error.code === '23505') {
+                // Duplicate key violation, means race condition or I missed it.
+                // Should fetch existing
+                fetchConversations();
+                return;
+            }
+            if (data) convId = data.id;
+        }
+
+        if (convId) {
+            setActiveConvId(convId);
+            setShowNewChat(false);
+            setSearchTerm('');
+            fetchConversations();
+        }
+    }
+
+    return (
+        <div className="h-[calc(100vh-2rem)] flex gap-6">
+            {/* Sidebar List */}
+            <GlassCard className="w-1/3 flex flex-col p-0 overflow-hidden">
+                <div className="p-4 border-b border-glass-border flex justify-between items-center bg-background/50">
+                    <h2 className="font-bold text-white">Messages</h2>
+                    <button
+                        onClick={() => setShowNewChat(true)}
+                        className="p-2 bg-primary/20 hover:bg-primary/40 rounded-full text-primary transition-colors"
+                    >
+                        <Plus className="w-5 h-5" />
+                    </button>
+                </div>
+
+                <div className="flex-1 overflow-y-auto">
+                    {conversations.map(c => (
+                        <div
+                            key={c.id}
+                            onClick={() => setActiveConvId(c.id)}
+                            className={cn(
+                                "p-4 border-b border-glass-border cursor-pointer hover:bg-white/5 transition-colors flex items-center gap-3",
+                                activeConvId === c.id ? "bg-white/10" : ""
+                            )}
+                        >
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                                {c.otherUser.username[0].toUpperCase()}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                                <div className="flex justify-between items-baseline">
+                                    <h4 className="text-white font-medium truncate">{c.otherUser.username}</h4>
+                                    <span className="text-xs text-gray-500">
+                                        {new Date(c.last_message_at).toLocaleDateString()}
+                                    </span>
+                                </div>
+                                {/* Badges in list */}
+                                {c.otherUser.badges && c.otherUser.badges.length > 0 && (
+                                    <div className="flex gap-1 mt-1">
+                                        {c.otherUser.badges.slice(0, 1).map(b => (
+                                            <span key={b} className="text-[10px] px-1.5 py-0.5 rounded-full bg-yellow-500/20 text-yellow-400 border border-yellow-500/30">
+                                                {b}
+                                            </span>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                    {conversations.length === 0 && (
+                        <div className="p-8 text-center text-gray-500 text-sm">
+                            No conversations yet. Start one!
+                        </div>
+                    )}
+                </div>
+            </GlassCard>
+
+            {/* Chat Area */}
+            <GlassCard className="flex-1 flex flex-col p-0 overflow-hidden relative">
+                {activeConvId ? (
+                    <>
+                        {/* Header */}
+                        <div className="p-4 border-b border-glass-border bg-background/50 backdrop-blur-md flex items-center gap-3">
+                            <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm font-bold">
+                                {conversations.find(c => c.id === activeConvId)?.otherUser.username[0].toUpperCase()}
+                            </div>
+                            <div>
+                                <h3 className="text-white font-bold flex items-center gap-2">
+                                    {conversations.find(c => c.id === activeConvId)?.otherUser.username}
+                                    <UserBadge badges={conversations.find(c => c.id === activeConvId)?.otherUser.badges} />
+                                </h3>
+                            </div>
+                        </div>
+
+                        {/* Messages */}
+                        <div className="flex-1 overflow-y-auto p-4 space-y-3">
+                            {messages.map((msg, i) => {
+                                const isMe = msg.sender_id === user.id;
+                                return (
+                                    <div key={msg.id} className={cn("flex", isMe ? "justify-end" : "justify-start")}>
+                                        <div className={cn(
+                                            "max-w-[70%] px-4 py-2 rounded-2xl text-sm",
+                                            isMe ? "bg-primary text-white rounded-tr-none" : "bg-background-lighter border border-glass-border text-gray-200 rounded-tl-none"
+                                        )}>
+                                            {msg.content}
+                                            <div className={cn("text-[9px] mt-1 text-right opacity-70", isMe ? "text-white" : "text-gray-500")}>
+                                                {new Date(msg.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                            </div>
+                                        </div>
+                                    </div>
+                                )
+                            })}
+                            <div ref={messagesEndRef} />
+                        </div>
+
+                        {/* Input */}
+                        <form onSubmit={sendMessage} className="p-4 border-t border-glass-border bg-background/50">
+                            <div className="flex gap-2">
+                                <input
+                                    className="flex-1 bg-background-lighter border border-glass-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary"
+                                    placeholder="Type a message..."
+                                    value={newMessage}
+                                    onChange={(e) => setNewMessage(e.target.value)}
+                                />
+                                <button disabled={!newMessage.trim()} type="submit" className="p-3 bg-primary rounded-xl text-white hover:bg-primary-glow transition-all disabled:opacity-50">
+                                    <Send className="w-5 h-5" />
+                                </button>
+                            </div>
+                        </form>
+                    </>
+                ) : (
+                    <div className="flex-1 flex flex-col items-center justify-center text-gray-500">
+                        <MessageSquare className="w-16 h-16 mb-4 opacity-20" />
+                        <p>Select a conversation to start chatting</p>
+                    </div>
+                )}
+            </GlassCard>
+
+            {/* New Chat Modal */}
+            {showNewChat && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+                    <GlassCard className="w-full max-w-md p-6 bg-background">
+                        <h3 className="text-xl font-bold text-white mb-4">New Message</h3>
+                        <div className="relative mb-4">
+                            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-500" />
+                            <input
+                                className="w-full bg-background-lighter border border-glass-border rounded-lg pl-9 pr-4 py-2 text-white focus:outline-none focus:border-primary"
+                                placeholder="Search users..."
+                                value={searchTerm}
+                                onChange={(e) => searchUsers(e.target.value)}
+                                autoFocus
+                            />
+                        </div>
+                        <div className="space-y-2 max-h-60 overflow-y-auto">
+                            {searchResults.map(u => (
+                                <button
+                                    key={u.id}
+                                    onClick={() => startConversation(u)}
+                                    className="w-full text-left p-3 rounded-lg hover:bg-white/10 flex items-center gap-3 transition-colors text-gray-300 hover:text-white"
+                                >
+                                    <div className="w-8 h-8 rounded-full bg-gray-700 flex items-center justify-center text-xs font-bold">
+                                        {u.username[0].toUpperCase()}
+                                    </div>
+                                    <span>{u.username}</span>
+                                    {u.badges && u.badges.length > 0 && (
+                                        <span className="text-[10px] text-yellow-400 border border-yellow-500/30 px-1.5 rounded ml-auto">
+                                            {u.badges[0]}
+                                        </span>
+                                    )}
+                                </button>
+                            ))}
+                        </div>
+                        <div className="flex justify-end mt-4">
+                            <button onClick={() => setShowNewChat(false)} className="text-gray-400 hover:text-white">Cancel</button>
+                        </div>
+                    </GlassCard>
+                </div>
+            )}
+        </div>
+    );
+}

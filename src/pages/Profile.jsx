@@ -6,6 +6,7 @@ import { supabase } from '../lib/supabase';
 import { User, Mail, Award, Calendar, TrendingUp, Zap, Clock, ChevronRight } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { Link } from 'react-router-dom';
+import { UserBadge } from '../components/UI/UserBadge';
 
 export default function Profile() {
     const { user, profile } = useAuth();
@@ -14,6 +15,7 @@ export default function Profile() {
     const [loading, setLoading] = useState(false);
     const [statsLoading, setStatsLoading] = useState(true);
     const [results, setResults] = useState([]);
+    const [badges, setBadges] = useState([]);
     const [stats, setStats] = useState({
         avgScore: 0,
         highestScore: 0,
@@ -27,8 +29,21 @@ export default function Profile() {
             // Calculate XP progress (each level is 100 XP)
             const progress = profile.xp % 100;
             setStats(prev => ({ ...prev, xpProgress: progress }));
+
+            // Set badges directly from profile if available, or fetch
+            if (profile.badges) {
+                setBadges(profile.badges);
+            } else {
+                // Fallback fetch if not in context yet
+                fetchBadges();
+            }
         }
     }, [profile]);
+
+    async function fetchBadges() {
+        const { data } = await supabase.from('profiles').select('badges').eq('id', user.id).single();
+        if (data && data.badges) setBadges(data.badges);
+    }
 
     useEffect(() => {
         if (user) {
@@ -130,6 +145,11 @@ export default function Profile() {
 
                     <div className="flex-1 text-center md:text-left space-y-4">
                         <div className="space-y-1">
+                            {/* Badges Display */}
+                            <div className="flex justify-center md:justify-start mb-2">
+                                <UserBadge badges={badges} />
+                            </div>
+
                             {editing ? (
                                 <div className="flex gap-2">
                                     <input
