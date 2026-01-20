@@ -8,6 +8,7 @@ import CreatePost from './pages/Forum/CreatePost';
 import ThreadView from './pages/Forum/ThreadView';
 import TestList from './pages/MockTests/TestList';
 import TakeTest from './pages/MockTests/TakeTest';
+import TestResult from './pages/MockTests/TestResult';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
 import GroupList from './pages/Groups/GroupList';
@@ -39,6 +40,7 @@ function App() {
                 <Route path="messages" element={<Messages />} />
                 <Route path="tests" element={<TestList />} />
                 <Route path="tests/:id" element={<TakeTest />} />
+                <Route path="results/:id" element={<TestResult />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
