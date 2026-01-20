@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { GlassCard } from '../UI/GlassCard';
 import { NeonButton } from '../UI/NeonButton';
 import { generateMockTest } from '../../lib/openRouter';
+import { Sparkles, X, BookOpen, Layers, BarChart, GraduationCap, ArrowRight } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
