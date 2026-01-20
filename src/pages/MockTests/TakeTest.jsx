@@ -6,7 +6,6 @@ import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { Clock, AlertTriangle, CheckCircle, ChevronRight, ChevronLeft, Maximize, AlertOctagon } from 'lucide-react';
 import { cn } from '../../lib/utils';
-import { analyzeTestPerformance } from '../../lib/openRouter';
 
 export default function TakeTest() {
     const { id } = useParams();
@@ -129,31 +128,7 @@ export default function TakeTest() {
 
             const percentage = (totalScore / maxMarks) * 100;
 
-            // 2. Generate AI Analysis (run in parallel but don't block saving if it fails)
-            // We want to navigate to results page ASAP, maybe pass the analysis promise or do it there?
-            // For better UX, we'll do it here if it's fast, or trigger it. 
-            // Let's await it for a "Smart Processing" feel.
-
-            let aiAnalysis = null;
-            try {
-                // Map local questions to include correct answer for the AI function
-                const questionsForAI = questions.map(q => {
-                    const correct = correctAnswers.find(c => c.id === q.id);
-                    return { ...q, correct_option: correct?.correct_option };
-                });
-
-                aiAnalysis = await analyzeTestPerformance(
-                    test.title,
-                    totalScore,
-                    maxMarks,
-                    questionsForAI,
-                    answers
-                );
-            } catch (aiError) {
-                console.error("AI Analysis failed:", aiError);
-            }
-
-            // 3. Save Result
+            // 2. Save Result
             const { data: resultData, error } = await supabase
                 .from('results')
                 .insert({
@@ -163,8 +138,7 @@ export default function TakeTest() {
                     total_marks: maxMarks,
                     percentage: percentage,
                     time_taken_seconds: (test.duration_minutes * 60) - timeLeft,
-                    warnings_count: warnings,
-                    ai_analysis: aiAnalysis
+                    warnings_count: warnings
                 })
                 .select()
                 .single();
@@ -258,7 +232,6 @@ export default function TakeTest() {
             {submitting ? (
                 <div className="text-center py-20 animate-pulse">
                     <h2 className="text-2xl font-bold text-white mb-2">Submitting Test...</h2>
-                    <p className="text-primary">Analyzing performance with AI...</p>
                 </div>
             ) : (
                 <GlassCard className="p-8 min-h-[400px] flex flex-col">

@@ -3,7 +3,7 @@ import { useParams, Link } from 'react-router-dom';
 import { supabase } from '../../lib/supabase';
 import { GlassCard } from '../../components/UI/GlassCard';
 import { NeonButton } from '../../components/UI/NeonButton';
-import { CheckCircle, XCircle, AlertTriangle, ChevronRight, Trophy, Brain, Target, Zap } from 'lucide-react';
+import { CheckCircle, XCircle, AlertTriangle, ChevronRight, Trophy, Target, Zap } from 'lucide-react';
 import Confetti from 'react-confetti';
 import { cn } from '../../lib/utils';
 import { useWindowSize } from 'react-use'; // Just in case, but we can standard window.innerWidth
@@ -70,8 +70,6 @@ export default function TestResult() {
     if (loading) return <div className="text-center text-white py-20">Calculating Results...</div>;
     if (!result || !test) return <div className="text-center text-red-500 py-20">Result not found.</div>;
 
-    const ai = result.ai_analysis;
-
     return (
         <div className="max-w-5xl mx-auto space-y-8 pb-20">
             {showConfetti && <Confetti width={windowDimensions.width} height={windowDimensions.height} recycle={false} numberOfPieces={500} />}
@@ -125,54 +123,7 @@ export default function TestResult() {
                 </GlassCard>
             </div>
 
-            {/* AI Analysis Section */}
-            {ai && (
-                <GlassCard className="p-8 border-primary/30 bg-primary/5">
-                    <div className="flex items-center gap-3 mb-6">
-                        <Brain className="w-8 h-8 text-primary" />
-                        <h2 className="text-2xl font-bold text-white">AI Performance Analysis</h2>
-                    </div>
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                        <div>
-                            <h3 className="text-green-400 font-bold mb-3 flex items-center gap-2">
-                                <CheckCircle className="w-5 h-5" /> Strengths
-                            </h3>
-                            <ul className="space-y-2">
-                                {ai.strengths?.map((s, i) => (
-                                    <li key={i} className="text-gray-300 text-sm pl-2 border-l-2 border-green-500/30">{s}</li>
-                                ))}
-                            </ul>
-                        </div>
-                        <div>
-                            <h3 className="text-red-400 font-bold mb-3 flex items-center gap-2">
-                                <AlertTriangle className="w-5 h-5" /> Areas for Improvement
-                            </h3>
-                            <ul className="space-y-2">
-                                {ai.weaknesses?.map((w, i) => (
-                                    <li key={i} className="text-gray-300 text-sm pl-2 border-l-2 border-red-500/30">{w}</li>
-                                ))}
-                            </ul>
-                        </div>
-                    </div>
-
-                    <div className="mt-8 pt-6 border-t border-glass-border">
-                        <h3 className="text-white font-bold mb-2">Coach's Summary</h3>
-                        <p className="text-gray-400 italic">"{ai.summary}"</p>
-
-                        <div className="mt-4">
-                            <h4 className="text-sm font-bold text-primary uppercase tracking-wider mb-2">Study Roadmap</h4>
-                            <div className="flex flex-wrap gap-2">
-                                {ai.roadmap?.map((step, i) => (
-                                    <span key={i} className="px-3 py-1 rounded-full bg-primary/10 text-primary text-xs border border-primary/20">
-                                        {i + 1}. {step}
-                                    </span>
-                                ))}
-                            </div>
-                        </div>
-                    </div>
-                </GlassCard>
-            )}
 
             {/* Review Section (Placeholder for MVP, but listing questions helps) */}
             <div className="pt-8">
