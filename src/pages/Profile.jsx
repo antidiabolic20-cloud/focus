@@ -119,7 +119,7 @@ export default function Profile() {
     return (
         <div className="max-w-6xl mx-auto space-y-8 pb-10">
             {/* Profile Header Card */}
-            <GlassCard className="relative overflow-hidden">
+            <GlassCard className="relative overflow-hidden p-6 md:p-8">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
 
