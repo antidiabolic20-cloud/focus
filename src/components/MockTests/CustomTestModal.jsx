@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { GlassCard } from '../UI/GlassCard';
 import { NeonButton } from '../UI/NeonButton';
-import { Sparkles, X, BookOpen, Layers, BarChart, GraduationCap, ArrowRight } from 'lucide-react';
-import { generateMockTest } from '../../lib/gemini';
-import { supabase } from '../../lib/supabase';
+import { generateMockTest } from '../../lib/openRouter';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 
@@ -85,7 +83,7 @@ export function CustomTestModal({ onClose }) {
                 <div className="p-6 border-b border-glass-border bg-primary/10 flex justify-between items-center">
                     <div className="flex items-center gap-2">
                         <Sparkles className="w-5 h-5 text-primary" />
-                        <h2 className="text-xl font-bold text-white">AI Test Generator (Powered by Gemini)</h2>
+                        <h2 className="text-xl font-bold text-white">AI Test Generator (via OpenRouter)</h2>
                     </div>
                     <button onClick={onClose} className="text-gray-400 hover:text-white transition-colors">
                         <X className="w-6 h-6" />
@@ -96,7 +94,7 @@ export function CustomTestModal({ onClose }) {
                     {loading ? (
                         <div className="text-center py-12 space-y-4">
                             <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mx-auto"></div>
-                            <h3 className="text-xl font-bold text-white">Gemini is Thinking...</h3>
+                            <h3 className="text-xl font-bold text-white">AI is Thinking...</h3>
                             <p className="text-gray-400">Crafting high-quality questions for you.</p>
                         </div>
                     ) : (
@@ -163,7 +161,7 @@ export function CustomTestModal({ onClose }) {
                             </div>
 
                             <NeonButton onClick={handleGenerate} className="w-full justify-center mt-4">
-                                Generate with Gemini <ArrowRight className="w-4 h-4 ml-2" />
+                                Generate Test <ArrowRight className="w-4 h-4 ml-2" />
                             </NeonButton>
                         </div>
                     )}
