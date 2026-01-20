@@ -126,9 +126,10 @@ export default function TakeTest() {
                 if (answers[q.id] === q.correct_option) totalScore += q.marks;
             });
 
-            const percentage = (totalScore / maxMarks) * 100;
+            const percentage = maxMarks > 0 ? (totalScore / maxMarks) * 100 : 0;
 
             // 2. Save Result
+            console.log("Saving result:", { totalScore, maxMarks, percentage });
             const { data: resultData, error } = await supabase
                 .from('results')
                 .insert({
@@ -143,7 +144,11 @@ export default function TakeTest() {
                 .select()
                 .single();
 
-            if (error) throw error;
+            if (error) {
+                console.error("Supabase Save Error:", error);
+                throw error;
+            }
+            console.log("Result saved successfully:", resultData);
 
             // 4. Update XP
             await supabase.rpc('increment_xp', { user_id: user.id, amount: 20 }); // More XP for completion

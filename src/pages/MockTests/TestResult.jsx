@@ -36,24 +36,26 @@ export default function TestResult() {
                 .single();
 
             if (error) throw error;
+            console.log("Fetched Result:", resultData);
             setResult(resultData);
 
-            if (resultData.percentage >= 80) {
+            if (resultData && resultData.percentage >= 80) {
                 setShowConfetti(true);
                 setTimeout(() => setShowConfetti(false), 8000); // Stop after 8s
             }
 
             // 2. Fetch Test Info
-            const { data: testData } = await supabase
+            const { data: testData, error: testError } = await supabase
                 .from('tests')
                 .select('*')
                 .eq('id', resultData.test_id)
                 .single();
+
+            if (testError) console.warn("Error loading test info:", testError);
+            console.log("Fetched Test:", testData);
             setTest(testData);
 
             // 3. Fetch Questions (to review)
-            // Ideally we should have stored the snapshot of questions in results to be immutable,
-            // but for now fetching live questions.
             const { data: qData } = await supabase
                 .from('questions')
                 .select('id, content, options, correct_option, marks')
@@ -61,7 +63,7 @@ export default function TestResult() {
             setQuestions(qData || []);
 
         } catch (err) {
-            console.error("Error loading result:", err);
+            console.error("Error in fetchResult:", err);
         } finally {
             setLoading(false);
         }
@@ -85,22 +87,24 @@ export default function TestResult() {
                 <GlassCard className="col-span-1 md:col-span-2 p-8 flex flex-col items-center justify-center relative overflow-hidden">
                     <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-primary to-accent"></div>
                     <div className="text-6xl font-black text-transparent bg-clip-text bg-gradient-to-br from-white to-gray-400 mb-2">
-                        {Math.round(result.percentage)}%
+                        {Math.round(result.percentage || 0)}%
                     </div>
                     <p className="text-xl text-gray-400 mb-6">
-                        Score: {result.score} / {result.total_marks}
+                        Score: {result.score || 0} / {result.total_marks || 0}
                     </p>
 
                     <div className="flex gap-4">
                         <div className="text-center px-6 py-3 bg-white/5 rounded-xl border border-glass-border">
                             <Zap className="w-6 h-6 text-yellow-400 mx-auto mb-1" />
                             <p className="text-xs text-gray-400 uppercase">XP Earned</p>
-                            <p className="text-lg font-bold text-white">+{Math.round(result.score / 2) + 20}</p>
+                            <p className="text-lg font-bold text-white">+{Math.round((result.score || 0) / 2) + 20}</p>
                         </div>
                         <div className="text-center px-6 py-3 bg-white/5 rounded-xl border border-glass-border">
                             <Clock className="w-6 h-6 text-blue-400 mx-auto mb-1" />
                             <p className="text-xs text-gray-400 uppercase">Time</p>
-                            <p className="text-lg font-bold text-white">{Math.floor(result.time_taken_seconds / 60)}m {result.time_taken_seconds % 60}s</p>
+                            <p className="text-lg font-bold text-white">
+                                {Math.floor((result.time_taken_seconds || 0) / 60)}m {(result.time_taken_seconds || 0) % 60}s
+                            </p>
                         </div>
                     </div>
                 </GlassCard>
