@@ -10,6 +10,8 @@ import TestList from './pages/MockTests/TestList';
 import TakeTest from './pages/MockTests/TakeTest';
 import Leaderboard from './pages/Leaderboard';
 import Profile from './pages/Profile';
+import GroupList from './pages/Groups/GroupList';
+import GroupDetail from './pages/Groups/GroupDetail';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 
@@ -26,6 +28,8 @@ function App() {
             <Route path="forums" element={<ForumList />} />
             <Route path="forums/create" element={<CreatePost />} />
             <Route path="forums/:id" element={<ThreadView />} />
+            <Route path="groups" element={<GroupList />} />
+            <Route path="groups/:id" element={<GroupDetail />} />
             <Route path="tests" element={<TestList />} />
             <Route path="tests/:id" element={<TakeTest />} />
             <Route path="leaderboard" element={<Leaderboard />} />
