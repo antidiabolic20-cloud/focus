@@ -39,7 +39,6 @@ export function CustomTestModal({ onClose }) {
             const { data: testData, error: testError } = await supabase
                 .from('tests')
                 .insert({
-                    created_by: user ? user.id : null, // Handle auth appropriately
                     title: aiData.title,
                     description: aiData.description,
                     category_id: null,
