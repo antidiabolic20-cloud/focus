@@ -18,7 +18,10 @@ export const battleService = {
         }
 
         const { data: availableBattles, error } = await query;
-        if (error) throw error;
+        if (error) {
+            console.error("Matchmaking Search Error:", error);
+            throw error;
+        }
 
         if (availableBattles && availableBattles.length > 0) {
             // JOIN EXISTING BATTLE
@@ -30,7 +33,10 @@ export const battleService = {
                 .select()
                 .single();
 
-            if (joinError) throw joinError;
+            if (joinError) {
+                console.error("Matchmaking Join Error:", joinError);
+                throw joinError;
+            }
 
             // Initialize progress for player 2
             await this.initProgress(battle.id, userId);
@@ -52,7 +58,10 @@ export const battleService = {
                 .select()
                 .single();
 
-            if (createError) throw createError;
+            if (createError) {
+                console.error("Matchmaking Create Error:", createError);
+                throw createError;
+            }
 
             // Initialize progress for player 1
             await this.initProgress(newBattle.id, userId);
