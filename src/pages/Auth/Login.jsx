@@ -3,6 +3,7 @@ import { useAuth } from '../../context/AuthContext';
 import { useNavigate, Link } from 'react-router-dom';
 import { GlassCard } from '../../components/UI/GlassCard';
 import { NeonButton } from '../../components/UI/NeonButton';
+import { Logo } from '../../components/UI/Logo';
 
 export default function Login() {
     const [email, setEmail] = useState('');
@@ -31,11 +32,8 @@ export default function Login() {
     return (
         <div className="min-h-screen flex items-center justify-center bg-background px-4">
             <div className="w-full max-w-md">
-                <div className="text-center mb-8">
-                    <h1 className="text-3xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                        FOCUS
-                    </h1>
-                    <p className="text-gray-400 mt-2">Welcome back, Scholar.</p>
+                <div className="text-center mb-8 flex justify-center">
+                    <Logo size="large" />
                 </div>
 
                 <GlassCard className="p-8 border-primary/20 shadow-neon-purple/20">

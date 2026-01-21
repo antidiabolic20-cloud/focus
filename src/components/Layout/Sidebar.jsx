@@ -1,4 +1,5 @@
 import React from 'react';
+import { Logo } from '../UI/Logo';
 import { NavLink, useNavigate } from 'react-router-dom';
 import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X } from 'lucide-react';
 import { cn } from '../../lib/utils';
@@ -37,12 +38,7 @@ export function Sidebar({ isOpen, onClose }) {
                 isOpen ? "translate-x-0" : "-translate-x-full"
             )}>
                 <div className="p-6 flex items-center justify-between">
-                    <div>
-                        <h1 className="text-2xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                            FOCUS
-                        </h1>
-                        <p className="text-xs text-gray-500 mt-1">Student Platform</p>
-                    </div>
+                    <Logo />
                     <button onClick={onClose} className="p-2 text-gray-400 hover:text-[rgb(var(--text-main))] md:hidden">
                         <X className="w-6 h-6" />
                     </button>
