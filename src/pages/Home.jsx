@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { GlassCard } from '../components/UI/GlassCard';
 import { NeonButton } from '../components/UI/NeonButton';
-import { Play, MessageSquare, TrendingUp, Trophy, ArrowRight, Zap } from 'lucide-react'; // Replaced Fire with Zap for XP
+import { Play, MessageSquare, TrendingUp, Trophy, ArrowRight, Zap, Swords } from 'lucide-react'; // Replaced Fire with Zap for XP
 import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
@@ -110,7 +110,7 @@ export default function Home() {
             </div>
 
             {/* Stats Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                 <GlassCard className="relative overflow-hidden group">
                     <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
                         <TrendingUp className="w-24 h-24 text-primary" />
@@ -138,6 +138,22 @@ export default function Home() {
                         <span className="text-gray-500 text-sm ml-2">by XP</span>
                     </div>
                     <p className="text-xs text-gray-400 mt-4">{user ? "Keep learning to improve!" : "Log in to see rank"}</p>
+                </GlassCard>
+
+                <GlassCard className="relative overflow-hidden group bg-gradient-to-br from-red-900/20 to-orange-900/20 border-red-500/30">
+                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                        <Swords className="w-24 h-24 text-red-500" />
+                    </div>
+                    <h3 className="text-red-400 font-medium">Live Battle</h3>
+                    <div className="mt-4">
+                        <h4 className="text-white font-bold text-lg">1v1 Duel</h4>
+                        <p className="text-xs text-gray-400">Challenge others & steal XP</p>
+                    </div>
+                    <Link to="/battle" className="block mt-4">
+                        <NeonButton className="w-full text-sm bg-red-600 hover:bg-red-500 border-none">
+                            Fight Now
+                        </NeonButton>
+                    </Link>
                 </GlassCard>
 
                 <GlassCard className="md:col-span-3 lg:col-span-1 p-6 relative overflow-hidden group">

@@ -17,6 +17,8 @@ import Messages from './pages/Messages/Messages';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Analytics from './pages/Analytics';
+import BattleLobby from './pages/Battle/BattleLobby';
+import BattleArena from './pages/Battle/BattleArena';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -44,6 +46,8 @@ function App() {
                 <Route path="results/:id" element={<TestResult />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
                 <Route path="analytics" element={<Analytics />} />
+                <Route path="battle" element={<BattleLobby />} />
+                <Route path="battle/:id" element={<BattleArena />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
             </Routes>
