@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import GroupList from './pages/Groups/GroupList';
 import GroupDetail from './pages/Groups/GroupDetail';
 import Messages from './pages/Messages/Messages';
+import Community from './pages/Community';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Analytics from './pages/Analytics';
@@ -40,6 +41,7 @@ function App() {
                 <Route path="forums/:id" element={<ThreadView />} />
                 <Route path="groups" element={<GroupList />} />
                 <Route path="groups/:id" element={<GroupDetail />} />
+                <Route path="community" element={<Community />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="tests" element={<TestList />} />
                 <Route path="tests/:id" element={<TakeTest />} />
@@ -49,6 +51,7 @@ function App() {
                 <Route path="battle" element={<BattleLobby />} />
                 <Route path="battle/:id" element={<BattleArena />} />
                 <Route path="profile" element={<Profile />} />
+                <Route path="profile/:id" element={<Profile />} />
               </Route>
             </Routes>
           </BrowserRouter>

@@ -1,15 +1,19 @@
 import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { GlassCard } from '../components/UI/GlassCard';
 import { NeonButton } from '../components/UI/NeonButton';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
-import { User, Mail, Award, Calendar, TrendingUp, Zap, Clock, ChevronRight } from 'lucide-react';
+import { User, Mail, Award, Calendar, TrendingUp, Zap, Clock, ChevronRight, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { Link } from 'react-router-dom';
 import { UserBadge } from '../components/UI/UserBadge';
 
 export default function Profile() {
-    const { user, profile } = useAuth();
+    const { id: profileId } = useParams();
+    const { user: currentUser, profile: myProfile } = useAuth();
+
+    const [profile, setProfile] = useState(null);
+    const [isOwnProfile, setIsOwnProfile] = useState(false);
     const [editing, setEditing] = useState(false);
     const [username, setUsername] = useState('');
     const [loading, setLoading] = useState(false);
@@ -24,34 +28,47 @@ export default function Profile() {
     });
 
     useEffect(() => {
-        if (profile) {
-            setUsername(profile.username);
-            // Calculate XP progress (each level is 100 XP)
-            const progress = profile.xp % 100;
-            setStats(prev => ({ ...prev, xpProgress: progress }));
-
-            // Set badges directly from profile if available, or fetch
-            if (profile.badges) {
-                setBadges(profile.badges);
-            } else {
-                // Fallback fetch if not in context yet
-                fetchBadges();
+        if (!profileId || (currentUser && profileId === currentUser.id)) {
+            setIsOwnProfile(true);
+            if (myProfile) {
+                setProfile(myProfile);
+                setUsername(myProfile.username);
+                const progress = myProfile.xp % 100;
+                setStats(prev => ({ ...prev, xpProgress: progress }));
+                setBadges(myProfile.badges || []);
             }
+        } else {
+            setIsOwnProfile(false);
+            fetchOtherProfile(profileId);
         }
-    }, [profile]);
-
-    async function fetchBadges() {
-        const { data } = await supabase.from('profiles').select('badges').eq('id', user.id).single();
-        if (data && data.badges) setBadges(data.badges);
-    }
+    }, [profileId, myProfile, currentUser]);
 
     useEffect(() => {
-        if (user) {
-            fetchUserStats();
+        const targetId = profileId || currentUser?.id;
+        if (targetId) {
+            fetchUserStats(targetId);
         }
-    }, [user]);
+    }, [profileId, currentUser]);
 
-    async function fetchUserStats() {
+    async function fetchOtherProfile(id) {
+        try {
+            const { data, error } = await supabase
+                .from('profiles')
+                .select('*')
+                .eq('id', id)
+                .single();
+            if (error) throw error;
+            setProfile(data);
+            setUsername(data.username);
+            const progress = data.xp % 100;
+            setStats(prev => ({ ...prev, xpProgress: progress }));
+            setBadges(data.badges || []);
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+        }
+    }
+
+    async function fetchUserStats(userId) {
         try {
             setStatsLoading(true);
             const { data, error } = await supabase
@@ -60,7 +77,7 @@ export default function Profile() {
                     *,
                     test:tests(title, category:categories(name, color))
                 `)
-                .eq('user_id', user.id)
+                .eq('user_id', userId)
                 .order('created_at', { ascending: false });
 
             if (error) throw error;
@@ -78,11 +95,29 @@ export default function Profile() {
                     highestScore: highest,
                     totalTests: total
                 }));
+            } else {
+                setResults([]);
+                setStats({ avgScore: 0, highestScore: 0, totalTests: 0, xpProgress: 0 });
             }
         } catch (err) {
             console.error("Error fetching stats:", err);
         } finally {
             setStatsLoading(false);
+        }
+    }
+
+    async function toggleDMs() {
+        if (!isOwnProfile) return;
+        try {
+            const newValue = !profile.allow_dms;
+            const { error } = await supabase
+                .from('profiles')
+                .update({ allow_dms: newValue })
+                .eq('id', currentUser.id);
+            if (error) throw error;
+            setProfile(prev => ({ ...prev, allow_dms: newValue }));
+        } catch (error) {
+            console.error(error);
         }
     }
 
@@ -92,7 +127,7 @@ export default function Profile() {
             const { error } = await supabase
                 .from('profiles')
                 .update({ username })
-                .eq('id', user.id);
+                .eq('id', currentUser.id);
 
             if (error) throw error;
             setEditing(false);
@@ -105,7 +140,7 @@ export default function Profile() {
         }
     }
 
-    if (!user) return (
+    if (!currentUser && !profileId) return (
         <div className="flex flex-col items-center justify-center py-20">
             <User className="w-16 h-16 text-gray-600 mb-4" />
             <h2 className="text-xl font-bold text-white mb-2">Not Logged In</h2>
@@ -116,10 +151,34 @@ export default function Profile() {
         </div>
     );
 
+    if (!profile && !profileId) return <div className="text-white text-center py-20">Loading profile...</div>;
+
     return (
         <div className="max-w-6xl mx-auto space-y-8 pb-10">
             {/* Profile Header Card */}
             <GlassCard className="relative overflow-hidden p-6 md:p-8">
+                {/* Setting in top right for own profile */}
+                {isOwnProfile && (
+                    <div className="absolute top-6 right-6 z-20 flex items-center gap-3">
+                        <div className="flex items-center gap-2 bg-background-lighter px-3 py-1.5 rounded-full border border-glass-border">
+                            <Mail className={cn("w-4 h-4", profile?.allow_dms ? "text-primary" : "text-gray-500")} />
+                            <span className="text-xs font-medium text-gray-300">Allow DMs</span>
+                            <button
+                                onClick={toggleDMs}
+                                className={cn(
+                                    "w-10 h-5 rounded-full relative transition-all bg-gray-700",
+                                    profile?.allow_dms ? "bg-primary" : "bg-gray-700"
+                                )}
+                            >
+                                <div className={cn(
+                                    "absolute top-1 left-1 w-3 h-3 bg-white rounded-full transition-all",
+                                    profile?.allow_dms ? "left-6" : "left-1"
+                                )} />
+                            </button>
+                        </div>
+                    </div>
+                )}
+
                 <div className="absolute top-0 right-0 w-64 h-64 bg-primary/10 rounded-full blur-3xl -mr-32 -mt-32"></div>
                 <div className="absolute bottom-0 left-0 w-64 h-64 bg-secondary/10 rounded-full blur-3xl -ml-32 -mb-32"></div>
 
@@ -131,7 +190,7 @@ export default function Profile() {
                                     <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
                                 ) : (
                                     <div className="text-6xl font-bold text-primary-glow">
-                                        {(profile?.username || user.email)[0].toUpperCase()}
+                                        {(profile?.username || 'U')[0].toUpperCase()}
                                     </div>
                                 )}
                             </div>
@@ -145,12 +204,11 @@ export default function Profile() {
 
                     <div className="flex-1 text-center md:text-left space-y-4">
                         <div className="space-y-1">
-                            {/* Badges Display */}
                             <div className="flex justify-center md:justify-start mb-2">
                                 <UserBadge badges={badges} />
                             </div>
 
-                            {editing ? (
+                            {editing && isOwnProfile ? (
                                 <div className="flex gap-2">
                                     <input
                                         className="bg-background-lighter border border-primary/50 rounded-lg px-4 py-2 text-white text-2xl font-bold w-full focus:outline-none focus:ring-2 ring-primary/20"
@@ -166,22 +224,32 @@ export default function Profile() {
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center md:justify-start gap-4">
-                                    <h2 className="text-4xl font-black text-white tracking-tight">{profile?.username || 'Future Genius'}</h2>
-                                    <button
-                                        onClick={() => setEditing(true)}
-                                        className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
-                                    >
-                                        <User className="w-4 h-4" />
-                                    </button>
+                                    <h2 className="text-4xl font-black text-white tracking-tight">{profile?.username || 'Student'}</h2>
+                                    {isOwnProfile && (
+                                        <button
+                                            onClick={() => setEditing(true)}
+                                            className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-colors"
+                                        >
+                                            <User className="w-4 h-4" />
+                                        </button>
+                                    )}
+                                    {!isOwnProfile && profile?.allow_dms && (
+                                        <Link to="/messages">
+                                            <button className="flex items-center gap-2 px-4 py-2 bg-primary/20 hover:bg-primary text-primary hover:text-white rounded-xl text-sm font-bold transition-all">
+                                                <Mail className="w-4 h-4" /> Message
+                                            </button>
+                                        </Link>
+                                    )}
                                 </div>
                             )}
                             <div className="flex items-center justify-center md:justify-start gap-4 text-gray-400 text-sm">
-                                <span className="flex items-center gap-1"><Mail className="w-4 h-4" /> {user.email}</span>
-                                <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> Joined {new Date(user.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' })}</span>
+                                <span className="flex items-center gap-1"><Calendar className="w-4 h-4" /> Joined {profile?.created_at ? new Date(profile.created_at).toLocaleDateString(undefined, { month: 'long', year: 'numeric' }) : 'Unknown'}</span>
+                                {!isOwnProfile && !profile?.allow_dms && (
+                                    <span className="flex items-center gap-1 text-red-400/60"><Shield className="w-4 h-4" /> DMs Disabled</span>
+                                )}
                             </div>
                         </div>
 
-                        {/* XP Section */}
                         <div className="max-w-md">
                             <div className="flex justify-between items-end mb-2">
                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
@@ -192,7 +260,7 @@ export default function Profile() {
                             <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                                 <div
                                     className="h-full bg-gradient-to-r from-primary via-accent to-secondary shadow-neon-purple transition-all duration-1000 ease-out"
-                                    style={{ width: `${stats.xpProgress}%` }}
+                                    style={{ width: `${(profile?.xp % 100) || 0}%` }}
                                 ></div>
                             </div>
                         </div>
@@ -200,9 +268,7 @@ export default function Profile() {
                 </div>
             </GlassCard>
 
-            {/* Content Sheets */}
             <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-                {/* Stats Cards */}
                 <div className="lg:col-span-1 space-y-4">
                     <GlassCard className="p-4 flex items-center justify-between border-primary/20 bg-primary/5">
                         <div className="p-3 bg-primary/20 rounded-xl text-primary">
@@ -235,30 +301,20 @@ export default function Profile() {
                     </GlassCard>
                 </div>
 
-                {/* History Table */}
                 <div className="lg:col-span-3">
                     <GlassCard className="h-full">
                         <div className="flex items-center justify-between mb-6">
                             <h3 className="text-xl font-bold text-white flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-primary" /> Recent Test Activity
                             </h3>
-                            <Link to="/tests" className="text-sm text-primary hover:underline transition-all">Take more tests</Link>
                         </div>
 
                         {statsLoading ? (
-                            <div className="py-10 text-center text-gray-500">Retrieving your achievements...</div>
+                            <div className="py-10 text-center text-gray-500">Retrieving achievements...</div>
                         ) : results.length === 0 ? (
                             <div className="py-20 flex flex-col items-center justify-center text-center space-y-4">
-                                <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center text-gray-600">
-                                    <Award className="w-8 h-8" />
-                                </div>
-                                <div>
-                                    <p className="text-white font-medium">No test history yet</p>
-                                    <p className="text-gray-500 text-sm mt-1">Complete your first test to see your performance here!</p>
-                                </div>
-                                <Link to="/tests">
-                                    <NeonButton size="sm">Browse Mock Tests</NeonButton>
-                                </Link>
+                                <Award className="w-12 h-12 text-gray-600" />
+                                <p className="text-gray-500">No test history found for this student.</p>
                             </div>
                         ) : (
                             <div className="overflow-x-auto">
@@ -284,32 +340,20 @@ export default function Profile() {
                                                     </span>
                                                 </td>
                                                 <td className="py-4">
-                                                    <div className="flex items-center gap-2">
-                                                        <span className={cn(
-                                                            "text-sm font-bold",
-                                                            res.percentage >= 80 ? "text-green-400" :
-                                                                res.percentage >= 50 ? "text-yellow-400" : "text-red-400"
-                                                        )}>
-                                                            {res.percentage}%
-                                                        </span>
-                                                        <div className="w-12 h-1 bg-white/10 rounded-full overflow-hidden hidden sm:block">
-                                                            <div
-                                                                className={cn(
-                                                                    "h-full",
-                                                                    res.percentage >= 80 ? "bg-green-500" :
-                                                                        res.percentage >= 50 ? "bg-yellow-500" : "bg-red-500"
-                                                                )}
-                                                                style={{ width: `${res.percentage}%` }}
-                                                            ></div>
-                                                        </div>
-                                                    </div>
+                                                    <span className={cn(
+                                                        "text-sm font-bold",
+                                                        res.percentage >= 80 ? "text-green-400" :
+                                                            res.percentage >= 50 ? "text-yellow-400" : "text-red-400"
+                                                    )}>
+                                                        {res.percentage}%
+                                                    </span>
                                                 </td>
                                                 <td className="py-4 text-sm text-gray-500">
                                                     {new Date(res.created_at).toLocaleDateString()}
                                                 </td>
                                                 <td className="py-4 text-right">
                                                     <Link to={`/tests/${res.test_id}`}>
-                                                        <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white transition-all">
+                                                        <button className="p-2 rounded-lg bg-white/5 hover:bg-white/10 text-gray-400 hover:text-white">
                                                             <ChevronRight className="w-4 h-4" />
                                                         </button>
                                                     </Link>
@@ -326,4 +370,3 @@ export default function Profile() {
         </div>
     );
 }
-

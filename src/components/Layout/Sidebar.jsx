@@ -17,11 +17,11 @@ export function Sidebar({ isOpen, onClose }) {
     const navItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
         { icon: Swords, label: 'Battle', path: '/battle' },
+        { icon: Users, label: 'Community', path: '/community' },
         { icon: BarChart2, label: 'Analytics', path: '/analytics' },
         { icon: Trophy, label: 'Leaderboard', path: '/leaderboard' },
         { icon: MessageSquare, label: 'Forums', path: '/forums' },
         { icon: Users, label: 'Groups', path: '/groups' },
-        { icon: Mail, label: 'Messages', path: '/messages' },
         { icon: FileText, label: 'Mock Tests', path: '/tests' },
         { icon: User, label: 'Profile', path: '/profile' },
     ];

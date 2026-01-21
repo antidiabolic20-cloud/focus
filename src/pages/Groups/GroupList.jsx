@@ -4,12 +4,13 @@ import { NeonButton } from '../../components/UI/NeonButton';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
 import { Link, useNavigate } from 'react-router-dom';
-import { Plus, Users, Search, ArrowRight, Hash } from 'lucide-react';
+import { Plus, Users, Search, ArrowRight, Hash, Mail } from 'lucide-react';
 
 export default function GroupList() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [myGroups, setMyGroups] = useState([]);
+    const [pendingInvites, setPendingInvites] = useState([]);
     const [loading, setLoading] = useState(true);
 
     // Modal State
@@ -19,8 +20,57 @@ export default function GroupList() {
     const [joinCode, setJoinCode] = useState('');
 
     useEffect(() => {
-        if (user) fetchGroups();
+        if (user) {
+            fetchGroups();
+            fetchInvites();
+        }
     }, [user]);
+
+    async function fetchInvites() {
+        try {
+            const { data, error } = await supabase
+                .from('group_invites')
+                .select(`
+                    id,
+                    group:groups (id, name, description),
+                    inviter:profiles!inviter_id (username)
+                `)
+                .eq('invitee_id', user.id)
+                .eq('status', 'pending');
+
+            if (error) throw error;
+            setPendingInvites(data || []);
+        } catch (err) {
+            console.error(err);
+        }
+    }
+
+    async function handleInviteAction(inviteId, groupId, action) {
+        try {
+            if (action === 'accepted') {
+                // 1. Join group
+                const { error: joinError } = await supabase
+                    .from('group_members')
+                    .insert({ group_id: groupId, user_id: user.id, role: 'member' });
+                if (joinError) throw joinError;
+            }
+
+            // 2. Update invite status
+            const { error: inviteError } = await supabase
+                .from('group_invites')
+                .update({ status: action })
+                .eq('id', inviteId);
+
+            if (inviteError) throw inviteError;
+
+            // 3. Refresh
+            fetchInvites();
+            fetchGroups();
+        } catch (err) {
+            console.error(err);
+            alert("Action failed.");
+        }
+    }
 
     async function fetchGroups() {
         try {
@@ -145,6 +195,39 @@ export default function GroupList() {
                     <Plus className="w-4 h-4" /> Create Group
                 </NeonButton>
             </div>
+
+            {/* Pending Invites */}
+            {pendingInvites.length > 0 && (
+                <div className="space-y-4">
+                    <h3 className="text-lg font-bold text-primary flex items-center gap-2">
+                        <Mail className="w-5 h-5" /> Pending Invitations
+                    </h3>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {pendingInvites.map(invite => (
+                            <GlassCard key={invite.id} className="p-4 flex items-center justify-between border-primary/30">
+                                <div>
+                                    <h4 className="font-bold text-white text-sm">{invite.group.name}</h4>
+                                    <p className="text-xs text-gray-500">Invited by <span className="text-primary">{invite.inviter.username}</span></p>
+                                </div>
+                                <div className="flex gap-2">
+                                    <button
+                                        onClick={() => handleInviteAction(invite.id, invite.group.id, 'accepted')}
+                                        className="px-3 py-1.5 bg-green-500/20 hover:bg-green-500 text-green-500 hover:text-white rounded-lg text-xs font-bold transition-all"
+                                    >
+                                        Accept
+                                    </button>
+                                    <button
+                                        onClick={() => handleInviteAction(invite.id, invite.group.id, 'rejected')}
+                                        className="px-3 py-1.5 bg-red-500/20 hover:bg-red-500 text-red-500 hover:text-white rounded-lg text-xs font-bold transition-all"
+                                    >
+                                        Decline
+                                    </button>
+                                </div>
+                            </GlassCard>
+                        ))}
+                    </div>
+                </div>
+            )}
 
             {/* Join Section */}
             <GlassCard className="p-6">

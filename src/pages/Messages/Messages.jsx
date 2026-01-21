@@ -211,6 +211,7 @@ export default function Messages() {
             .select('id, username, avatar_url, badges')
             .ilike('username', `%${q}%`)
             .neq('id', user.id)
+            .eq('allow_dms', true)
             .limit(5);
 
         setSearchResults(data || []);
