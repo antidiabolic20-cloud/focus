@@ -32,8 +32,8 @@ export default function Leaderboard() {
         }
     }
 
-    function getUnsplashAvatar(seed) {
-        return `https://source.unsplash.com/random/100x100/?portrait&${seed}`;
+    function getUnsplashAvatar(username) {
+        return `https://ui-avatars.com/api/?name=${encodeURIComponent(username || 'User')}&background=random`;
     }
 
     return (
