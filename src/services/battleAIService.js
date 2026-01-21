@@ -5,6 +5,7 @@ const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
 const SITE_NAME = 'Focus - Student Dashboard';
 
 // Use specific DeepSeek model as requested
+// Use DeepSeek model
 const AI_MODEL = "deepseek/deepseek-r1:free";
 
 export const battleAIService = {
