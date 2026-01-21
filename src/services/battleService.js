@@ -1,4 +1,5 @@
 import { supabase } from '../lib/supabase';
+import { battleAIService } from './battleAIService';
 
 export const battleService = {
     /**
@@ -80,15 +81,9 @@ export const battleService = {
     },
 
     async fetchRandomQuestions(categoryId) {
-        // Simple random fetch logic
-        let query = supabase.from('questions').select('id, content, options, correct_option').limit(5);
-        // Note: In real prod, use a random function or RPC. For now, just taking 5.
-        if (categoryId) {
-            // query = query.eq('test:tests(category_id)', categoryId) 
-            // Logic simplified for prototype: just grab any 5 valid questions
-        }
-        const { data } = await query;
-        return data || [];
+        // Use AI to generate questions
+        // In future, we can look up category name from categoryId
+        return await battleAIService.generateBattleQuestions('General Knowledge');
     },
 
     async updateProgress(progressId, updates) {
