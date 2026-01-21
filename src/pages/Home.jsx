@@ -13,6 +13,7 @@ export default function Home() {
     const { user, profile } = useAuth();
     const [popularTopics, setPopularTopics] = useState([]);
     const [upcomingTests, setUpcomingTests] = useState([]);
+    const [activityData, setActivityData] = useState([]);
     const [stats, setStats] = useState({
         avgScore: 0,
         rank: '-',
