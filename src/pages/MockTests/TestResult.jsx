@@ -15,6 +15,7 @@ export default function TestResult() {
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showConfetti, setShowConfetti] = useState(false);
+    const [showSolutions, setShowSolutions] = useState(false);
     const [windowDimensions, setWindowDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
 
     useEffect(() => {
