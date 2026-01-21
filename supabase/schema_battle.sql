@@ -5,7 +5,7 @@ create table if not exists battles (
   created_by uuid references profiles(id) not null,
   opponent_id uuid references profiles(id), -- Nullable initially
   winner_id uuid references profiles(id),
-  category_id uuid references categories(id),
+  category_id bigint references categories(id),
   questions jsonb default '[]'::jsonb, -- Store the 5 questions for this match
   created_at timestamp with time zone default timezone('utc'::text, now()) not null
 );
@@ -26,17 +26,31 @@ create table if not exists battle_progress (
 alter table battles enable row level security;
 alter table battle_progress enable row level security;
 
--- Policies for battles
+-- DROP OLD POLICIES TO AVOID CONFLICTS
+drop policy if exists "Battles are viewable by everyone" on battles;
+drop policy if exists "Users can create battles" on battles;
+drop policy if exists "Users can update battles they are part of" on battles;
+drop policy if exists "Users can join waiting battles" on battles;
+drop policy if exists "Progress is viewable by everyone in the battle" on battle_progress;
+drop policy if exists "Users can update their own progress" on battle_progress;
+
+
+-- Battles Policies
 create policy "Battles are viewable by everyone" on battles
   for select using (true);
 
 create policy "Users can create battles" on battles
   for insert with check (auth.uid() = created_by);
 
-create policy "Users can update battles they are part of" on battles
-  for update using (auth.uid() = created_by or auth.uid() = opponent_id);
+-- ALLOW JOIN: Users can update a battle if they are part of it OR if it is waiting and has no opponent
+create policy "Users can update battles" on battles
+  for update using (
+    auth.uid() = created_by 
+    or auth.uid() = opponent_id
+    or (status = 'waiting' and opponent_id is null)
+  ); 
 
--- Policies for battle_progress
+-- Battle Progress Policies
 create policy "Progress is viewable by everyone in the battle" on battle_progress
   for select using (true);
 
@@ -44,6 +58,5 @@ create policy "Users can update their own progress" on battle_progress
   for all using (auth.uid() = user_id);
 
 -- Realtime publication
--- IMPORTANT: You must enable replication for these tables in your Supabase dashboard or via API
 -- alter publication supabase_realtime add table battles;
 -- alter publication supabase_realtime add table battle_progress;
