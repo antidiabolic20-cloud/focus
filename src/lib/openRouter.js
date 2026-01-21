@@ -5,7 +5,8 @@ const SITE_NAME = 'Focus - Student Dashboard';
 
 // List of free models to try in order of preference (reliability/speed)
 const AI_MODELS = [
-    "google/gemini-2.0-flash-exp:free",      // Best quality/speed
+    "deepseek/deepseek-r1-0528:free",        // Requested primary model
+    "google/gemini-2.0-flash-exp:free",      // Fast fallback
     "meta-llama/llama-3-8b-instruct:free",   // Fast fallback
     "mistralai/mistral-7b-instruct:free",    // Reliable fallback
     "microsoft/phi-3-medium-128k-instruct:free", // Another fallback
