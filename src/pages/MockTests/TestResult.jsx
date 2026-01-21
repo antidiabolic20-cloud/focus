@@ -14,9 +14,58 @@ export default function TestResult() {
     const [test, setTest] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showSolutions, setShowSolutions] = useState(false);
+    const [showConfetti, setShowConfetti] = useState(false);
+    const [windowDimensions, setWindowDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
 
-    // ... inside fetchResult, I already fetch questions ...
+    useEffect(() => {
+        const handleResize = () => setWindowDimensions({ width: window.innerWidth, height: window.innerHeight });
+        window.addEventListener('resize', handleResize);
+        fetchResult();
+        return () => window.removeEventListener('resize', handleResize);
+    }, [id]);
+
+    async function fetchResult() {
+        try {
+            // 1. Fetch Result
+            const { data: resultData, error } = await supabase
+                .from('results')
+                .select('*')
+                .eq('id', id)
+                .single();
+
+            if (error) throw error;
+            console.log("Fetched Result:", resultData);
+            setResult(resultData);
+
+            if (resultData && resultData.percentage >= 80) {
+                setShowConfetti(true);
+                setTimeout(() => setShowConfetti(false), 8000); // Stop after 8s
+            }
+
+            // 2. Fetch Test Info
+            const { data: testData, error: testError } = await supabase
+                .from('tests')
+                .select('*')
+                .eq('id', resultData.test_id)
+                .single();
+
+            if (testError) console.warn("Error loading test info:", testError);
+            console.log("Fetched Test:", testData);
+            setTest(testData);
+
+            // 3. Fetch Questions (to review)
+            const { data: qData } = await supabase
+                .from('questions')
+                .select('id, content, options, correct_option, marks')
+                .eq('test_id', resultData.test_id);
+            setQuestions(qData || []);
+
+        } catch (err) {
+            console.error("Error in fetchResult:", err);
+        } finally {
+            setLoading(false);
+        }
+    }
 
     if (loading) return <div className="text-center text-white py-20">Calculating Results...</div>;
     if (!result || !test) return <div className="text-center text-red-500 py-20">Result not found.</div>;
