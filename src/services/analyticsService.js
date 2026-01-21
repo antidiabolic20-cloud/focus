@@ -47,9 +47,11 @@ export const analyticsService = {
 
         if (error) throw error;
         console.log("Raw Activity Data:", data);
-        return data.map(item => ({
+        return data.map((item, index) => ({
             date: new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-            score: Number(item.percentage) || 0
+            fullDate: new Date(item.created_at).toLocaleString(),
+            score: Number(item.percentage) || 0,
+            id: index // Add index for unique identification if needed
         }));
     },
 

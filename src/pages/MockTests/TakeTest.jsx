@@ -139,7 +139,8 @@ export default function TakeTest() {
                     total_marks: maxMarks,
                     percentage: percentage,
                     time_taken_seconds: (test.duration_minutes * 60) - timeLeft,
-                    warnings_count: warnings
+                    warnings_count: warnings,
+                    answers: answers
                 })
                 .select()
                 .single();

@@ -14,60 +14,9 @@ export default function TestResult() {
     const [test, setTest] = useState(null);
     const [questions, setQuestions] = useState([]);
     const [loading, setLoading] = useState(true);
-    const [showConfetti, setShowConfetti] = useState(false);
+    const [showSolutions, setShowSolutions] = useState(false);
 
-    // Simple window size hook for confetti
-    const [windowDimensions, setWindowDimensions] = useState({ width: window.innerWidth, height: window.innerHeight });
-
-    useEffect(() => {
-        const handleResize = () => setWindowDimensions({ width: window.innerWidth, height: window.innerHeight });
-        window.addEventListener('resize', handleResize);
-        fetchResult();
-        return () => window.removeEventListener('resize', handleResize);
-    }, [id]);
-
-    async function fetchResult() {
-        try {
-            // 1. Fetch Result
-            const { data: resultData, error } = await supabase
-                .from('results')
-                .select('*')
-                .eq('id', id)
-                .single();
-
-            if (error) throw error;
-            console.log("Fetched Result:", resultData);
-            setResult(resultData);
-
-            if (resultData && resultData.percentage >= 80) {
-                setShowConfetti(true);
-                setTimeout(() => setShowConfetti(false), 8000); // Stop after 8s
-            }
-
-            // 2. Fetch Test Info
-            const { data: testData, error: testError } = await supabase
-                .from('tests')
-                .select('*')
-                .eq('id', resultData.test_id)
-                .single();
-
-            if (testError) console.warn("Error loading test info:", testError);
-            console.log("Fetched Test:", testData);
-            setTest(testData);
-
-            // 3. Fetch Questions (to review)
-            const { data: qData } = await supabase
-                .from('questions')
-                .select('id, content, options, correct_option, marks')
-                .eq('test_id', resultData.test_id);
-            setQuestions(qData || []);
-
-        } catch (err) {
-            console.error("Error in fetchResult:", err);
-        } finally {
-            setLoading(false);
-        }
-    }
+    // ... inside fetchResult, I already fetch questions ...
 
     if (loading) return <div className="text-center text-white py-20">Calculating Results...</div>;
     if (!result || !test) return <div className="text-center text-red-500 py-20">Result not found.</div>;
@@ -127,13 +76,81 @@ export default function TestResult() {
                 </GlassCard>
             </div>
 
+            {/* Solutions Section */}
+            <div className="space-y-6">
+                <div className="flex items-center justify-between">
+                    <h2 className="text-2xl font-bold text-white">Review Solutions</h2>
+                    <NeonButton
+                        variant="secondary"
+                        size="sm"
+                        onClick={() => setShowSolutions(!showSolutions)}
+                    >
+                        {showSolutions ? "Hide Solutions" : "Show Solutions"}
+                    </NeonButton>
+                </div>
 
+                {showSolutions && (
+                    <div className="space-y-6 animate-in fade-in slide-in-from-top-4 duration-500">
+                        {questions.map((q, idx) => {
+                            const userChoice = result.answers?.[q.id];
+                            const isCorrect = userChoice === q.correct_option;
 
-            {/* Review Section (Placeholder for MVP, but listing questions helps) */}
-            <div className="pt-8">
+                            return (
+                                <GlassCard key={q.id} className={cn(
+                                    "p-6 border-l-4",
+                                    isCorrect ? "border-l-green-500" : "border-l-red-500"
+                                )}>
+                                    <div className="flex justify-between items-start mb-4">
+                                        <h4 className="font-bold text-white">Question {idx + 1}</h4>
+                                        <span className={cn(
+                                            "text-xs font-bold px-2 py-1 rounded",
+                                            isCorrect ? "bg-green-500/20 text-green-400" : "bg-red-500/20 text-red-400"
+                                        )}>
+                                            {isCorrect ? "Correct" : "Incorrect"}
+                                        </span>
+                                    </div>
+                                    <p className="text-lg text-gray-200 mb-6">{q.content}</p>
+
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                                        {q.options.map((opt, oIdx) => {
+                                            const isUserChoice = userChoice === oIdx;
+                                            const isCorrectChoice = q.correct_option === oIdx;
+
+                                            return (
+                                                <div
+                                                    key={oIdx}
+                                                    className={cn(
+                                                        "p-4 rounded-xl border text-sm transition-all",
+                                                        isCorrectChoice ? "bg-green-500/10 border-green-500 text-white" :
+                                                            isUserChoice ? "bg-red-500/10 border-red-500 text-white" :
+                                                                "bg-white/5 border-glass-border text-gray-400"
+                                                    )}
+                                                >
+                                                    <div className="flex items-center justify-between">
+                                                        <span>{String.fromCharCode(65 + oIdx)}. {opt}</span>
+                                                        {isCorrectChoice && <CheckCircle className="w-4 h-4 text-green-500" />}
+                                                        {!isCorrect && isUserChoice && <XCircle className="w-4 h-4 text-red-500" />}
+                                                    </div>
+                                                </div>
+                                            );
+                                        })}
+                                    </div>
+                                </GlassCard>
+                            );
+                        })}
+                    </div>
+                )}
+            </div>
+
+            <div className="pt-8 flex justify-center gap-4">
                 <Link to="/tests">
-                    <NeonButton className="mx-auto w-full md:w-auto justify-center">
-                        Back to Tests <ChevronRight className="w-4 h-4 ml-2" />
+                    <NeonButton variant="outline">
+                        Back to Tests
+                    </NeonButton>
+                </Link>
+                <Link to="/">
+                    <NeonButton>
+                        Go to Dashboard <ChevronRight className="w-4 h-4 ml-2" />
                     </NeonButton>
                 </Link>
             </div>

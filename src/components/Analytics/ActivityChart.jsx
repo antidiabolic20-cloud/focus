@@ -22,11 +22,15 @@ export const ActivityChart = ({ data }) => {
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#1f2937" />
                     <XAxis
-                        dataKey="date"
+                        dataKey="fullDate" // Use unique timestamp
                         axisLine={false}
                         tickLine={false}
                         tick={{ fill: '#6b7280', fontSize: 10 }}
                         dy={10}
+                        tickFormatter={(val) => {
+                            const date = new Date(val);
+                            return date.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+                        }}
                     />
                     <YAxis
                         domain={[0, 100]}
@@ -37,6 +41,7 @@ export const ActivityChart = ({ data }) => {
                     <Tooltip
                         contentStyle={{ backgroundColor: '#111827', border: '1px solid #374151', borderRadius: '8px' }}
                         itemStyle={{ color: '#ec4899' }}
+                        labelStyle={{ color: '#9ca3af', marginBottom: '4px', fontSize: '12px' }}
                     />
                     <Area
                         type="monotone"
