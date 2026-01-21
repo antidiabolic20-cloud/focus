@@ -14,6 +14,7 @@ export const battleAIService = {
             Topic: ${categoryName}
             Difficulty: Medium
             Type: Multiple Choice
+            Focus: Random & Unique Facts (Seed: ${Math.random()})
 
             Return ONLY valid JSON.
             Structure:

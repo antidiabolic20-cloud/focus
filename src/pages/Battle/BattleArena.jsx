@@ -229,7 +229,9 @@ export default function BattleArena() {
             {/* Left: Player (You) */}
             <div className="w-full md:w-1/4 p-4 border border-glass-border bg-background/50 rounded-2xl flex flex-col items-center">
                 <img src={battle.player1?.id === user.id ? battle.player1.avatar_url : battle.player2?.avatar_url || 'https://via.placeholder.com/150'} className="w-20 h-20 rounded-full border-4 border-green-500 mb-4" />
-                <h3 className="font-bold text-white text-lg">YOU</h3>
+                <h3 className="font-bold text-white text-lg">
+                    {battle.player1?.id === user.id ? battle.player1?.username : battle.player2?.username} <span className="text-gray-400 text-sm">(You)</span>
+                </h3>
                 <div className="w-full bg-gray-800 h-6 rounded-full mt-4 overflow-hidden relative">
                     <div
                         className="bg-green-500 h-full transition-all duration-500"
