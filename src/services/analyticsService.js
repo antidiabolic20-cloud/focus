@@ -46,10 +46,10 @@ export const analyticsService = {
             .order('created_at', { ascending: true });
 
         if (error) throw error;
-
+        console.log("Raw Activity Data:", data);
         return data.map(item => ({
             date: new Date(item.created_at).toLocaleDateString(undefined, { month: 'short', day: 'numeric' }),
-            score: item.percentage
+            score: Number(item.percentage) || 0
         }));
     },
 
