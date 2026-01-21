@@ -1,7 +1,7 @@
 import React from 'react';
 import { Logo } from '../UI/Logo';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2 } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
@@ -16,6 +16,7 @@ export function Sidebar({ isOpen, onClose }) {
 
     const navItems = [
         { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
+        { icon: BarChart2, label: 'Analytics', path: '/analytics' },
         { icon: MessageSquare, label: 'Forums', path: '/forums' },
         { icon: Users, label: 'Groups', path: '/groups' },
         { icon: Mail, label: 'Messages', path: '/messages' },

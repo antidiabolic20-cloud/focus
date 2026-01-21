@@ -6,6 +6,8 @@ import { supabase } from '../lib/supabase';
 import { useAuth } from '../context/AuthContext';
 import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
+import { ActivityChart } from '../components/Analytics/ActivityChart';
+import { analyticsService } from '../services/analyticsService';
 
 export default function Home() {
     const { user, profile } = useAuth();
@@ -73,8 +75,12 @@ export default function Home() {
                         rank: rankError ? '-' : (count + 1),
                         totalTests: results?.length || 0
                     });
-                }
 
+                    // Load activity trend
+                    analyticsService.getActivityTimeline(user.id)
+                        .then(data => setActivityData(data))
+                        .catch(err => console.error("Activity fetch error:", err));
+                }
             } catch (error) {
                 console.error("Dashboard Fetch Error:", error);
             } finally {
@@ -133,19 +139,14 @@ export default function Home() {
                     <p className="text-xs text-gray-400 mt-4">{user ? "Keep learning to improve!" : "Log in to see rank"}</p>
                 </GlassCard>
 
-                <GlassCard className="flex flex-col justify-between bg-gradient-to-br from-primary/10 to-secondary/10 border-primary/20">
-                    <div>
-                        <h3 className="text-[rgb(var(--text-main))] font-medium">Total XP</h3>
-                        <div className="flex items-center gap-2 mt-2">
-                            <span className="text-3xl font-bold text-primary-glow">{profile?.xp || 0}</span>
-                            <Zap className="w-6 h-6 text-yellow-400 fill-current" />
-                        </div>
+                <GlassCard className="md:col-span-3 lg:col-span-1 p-6 relative overflow-hidden group">
+                    <div className="flex items-center justify-between mb-6">
+                        <h3 className="text-[rgb(var(--text-main))] font-medium">Performance Trend</h3>
+                        <Link to="/analytics" className="text-xs text-primary hover:text-primary-glow">Details</Link>
                     </div>
-                    <Link to="/leaderboard" className="w-full mt-4 block">
-                        <NeonButton variant="secondary" className="w-full text-sm">
-                            View Leaderboard
-                        </NeonButton>
-                    </Link>
+                    <div className="h-[120px]">
+                        <ActivityChart data={activityData.slice(-7)} />
+                    </div>
                 </GlassCard>
             </div>
 

@@ -14,8 +14,8 @@ import Profile from './pages/Profile';
 import GroupList from './pages/Groups/GroupList';
 import GroupDetail from './pages/Groups/GroupDetail';
 import Messages from './pages/Messages/Messages';
-import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
+import Analytics from './pages/Analytics';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -42,6 +42,7 @@ function App() {
                 <Route path="tests/:id" element={<TakeTest />} />
                 <Route path="results/:id" element={<TestResult />} />
                 <Route path="leaderboard" element={<Leaderboard />} />
+                <Route path="analytics" element={<Analytics />} />
                 <Route path="profile" element={<Profile />} />
               </Route>
             </Routes>
