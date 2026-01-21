@@ -14,6 +14,7 @@ import Profile from './pages/Profile';
 import GroupList from './pages/Groups/GroupList';
 import GroupDetail from './pages/Groups/GroupDetail';
 import Messages from './pages/Messages/Messages';
+import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Analytics from './pages/Analytics';
 
