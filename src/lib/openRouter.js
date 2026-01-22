@@ -5,12 +5,12 @@ const SITE_NAME = 'Focus - Student Dashboard';
 
 // List of free models to try in order of preference (reliability/speed)
 const AI_MODELS = [
-    "deepseek/deepseek-r1-0528:free",        // Requested primary model
-    "google/gemini-2.0-flash-exp:free",      // Fast fallback
-    "meta-llama/llama-3-8b-instruct:free",   // Fast fallback
-    "mistralai/mistral-7b-instruct:free",    // Reliable fallback
-    "microsoft/phi-3-medium-128k-instruct:free", // Another fallback
-    "huggingfaceh4/zephyr-7b-beta:free"      // Final fallback
+    "deepseek/deepseek-r1-0528:free",           // Primary model
+    "google/gemini-2.0-flash-exp:free",         // Fast fallback
+    "meta-llama/llama-3.3-8b-instruct:free",    // Llama 3.3 (updated)
+    "qwen/qwen-2.5-7b-instruct:free",           // Qwen 2.5
+    "mistralai/mistral-7b-instruct-v0.3:free",  // Mistral v0.3
+    "openchat/openchat-7b:free"                 // OpenChat fallback
 ];
 
 export async function generateMockTest({ subject, chapter, difficulty, count, grade }) {
