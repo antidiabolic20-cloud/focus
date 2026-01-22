@@ -53,4 +53,24 @@
   .text-glow-blue {
     text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
   }
+
+  /* Custom Scrollbar for Sidebar & Logic */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 4px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    background: rgba(139, 92, 246, 0.3);
+    /* Primary/30 */
+    border-radius: 10px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    background: rgba(139, 92, 246, 0.6);
+    /* Primary/60 */
+  }
 }
