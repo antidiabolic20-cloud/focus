@@ -1,15 +1,15 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { GlassCard } from '../../components/UI/GlassCard';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { Send, Users, Shield, Copy, Check } from 'lucide-react';
+import { Send, Users, Shield, Copy, Check, MessageSquare } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { UserBadge } from '../../components/UI/UserBadge';
 
 export default function GroupDetail() {
     const { id } = useParams();
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const navigate = useNavigate();
     const messagesEndRef = useRef(null);
 
@@ -18,6 +18,12 @@ export default function GroupDetail() {
     const [newMessage, setNewMessage] = useState('');
     const [loading, setLoading] = useState(true);
     const [copied, setCopied] = useState(false);
+
+    // Presence State
+    const [onlineMembers, setOnlineMembers] = useState({});
+    const [typingUsers, setTypingUsers] = useState([]);
+    const presenceChannelRef = useRef(null);
+    const typingTimeoutRef = useRef(null);
 
     useEffect(() => {
         if (!user) return;
@@ -41,6 +47,77 @@ export default function GroupDetail() {
             supabase.removeChannel(channel);
         };
     }, [id, user]);
+
+    // Presence channel for group
+    useEffect(() => {
+        if (!id || !user || !profile) return;
+
+        if (presenceChannelRef.current) {
+            supabase.removeChannel(presenceChannelRef.current);
+        }
+
+        const presenceChannel = supabase.channel(`presence:group:${id}`, {
+            config: { presence: { key: user.id } }
+        });
+
+        presenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                setOnlineMembers(state);
+
+                // Extract typing users
+                const typing = [];
+                Object.entries(state).forEach(([uid, presences]) => {
+                    if (uid !== user.id && presences?.[0]?.isTyping && presences?.[0]?.username) {
+                        typing.push(presences[0].username);
+                    }
+                });
+                setTypingUsers(typing);
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({
+                        online_at: new Date().toISOString(),
+                        username: profile?.username || 'Unknown',
+                        isTyping: false
+                    });
+                }
+            });
+
+        presenceChannelRef.current = presenceChannel;
+
+        return () => {
+            if (presenceChannelRef.current) {
+                supabase.removeChannel(presenceChannelRef.current);
+                presenceChannelRef.current = null;
+            }
+        };
+    }, [id, user, profile]);
+
+    // Handle typing broadcast
+    const handleInputChange = useCallback((e) => {
+        const value = e.target.value;
+        setNewMessage(value);
+
+        if (presenceChannelRef.current && profile) {
+            presenceChannelRef.current.track({
+                online_at: new Date().toISOString(),
+                username: profile.username,
+                isTyping: value.length > 0
+            });
+
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                if (presenceChannelRef.current) {
+                    presenceChannelRef.current.track({
+                        online_at: new Date().toISOString(),
+                        username: profile.username,
+                        isTyping: false
+                    });
+                }
+            }, 2000);
+        }
+    }, [profile]);
 
     useEffect(() => {
         scrollToBottom();
@@ -195,7 +272,13 @@ export default function GroupDetail() {
                         {group.name}
                         {group.is_private && <Shield className="w-4 h-4 text-primary" />}
                     </h1>
-                    <p className="text-gray-400 text-sm">{group.description}</p>
+                    <div className="flex items-center gap-3 text-sm">
+                        <p className="text-gray-400">{group.description}</p>
+                        <span className="flex items-center gap-1 text-green-400">
+                            <span className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
+                            {Object.keys(onlineMembers).length} online
+                        </span>
+                    </div>
                 </div>
                 <button
                     onClick={copyInviteCode}
@@ -252,16 +335,20 @@ export default function GroupDetail() {
 
                 {/* Input Area */}
                 <form onSubmit={handleSendMessage} className="p-4 bg-background/50 border-t border-glass-border backdrop-blur-md">
+                    {typingUsers.length > 0 && (
+                        <p className="text-xs text-primary animate-pulse mb-2">
+                            {typingUsers.join(', ')} {typingUsers.length === 1 ? 'is' : 'are'} typing...
+                        </p>
+                    )}
                     <div className="flex gap-2">
                         <input
                             className="flex-1 bg-background-lighter border border-glass-border rounded-xl px-4 py-3 text-white focus:outline-none focus:border-primary transition-colors placeholder:text-gray-600"
                             placeholder="Type a message..."
                             value={newMessage}
-                            onChange={(e) => setNewMessage(e.target.value)}
+                            onChange={handleInputChange}
                         />
                         <button
-                            type="button" // Actually type=submit
-                            onClick={handleSendMessage}
+                            type="submit"
                             disabled={!newMessage.trim()}
                             className="bg-primary hover:bg-primary-glow text-white p-3 rounded-xl disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-neon-purple/20"
                         >
@@ -274,5 +361,4 @@ export default function GroupDetail() {
     );
 }
 
-// Helper icon import fix if needed, assuming Lucide icons are used standardly.
-import { MessageSquare } from 'lucide-react';
+

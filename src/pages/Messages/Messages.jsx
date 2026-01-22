@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { GlassCard } from '../../components/UI/GlassCard';
 import { supabase } from '../../lib/supabase';
 import { useAuth } from '../../context/AuthContext';
-import { Send, Plus, Search, MessageSquare, ChevronLeft } from 'lucide-react';
+import { Send, Plus, Search, MessageSquare, ChevronLeft, Circle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { UserBadge } from '../../components/UI/UserBadge';
 
 export default function Messages() {
-    const { user } = useAuth();
+    const { user, profile } = useAuth();
     const [conversations, setConversations] = useState([]);
     const [activeConvId, setActiveConvId] = useState(null);
     const [messages, setMessages] = useState([]);
@@ -19,8 +19,13 @@ export default function Messages() {
     const [searchTerm, setSearchTerm] = useState('');
     const [searchResults, setSearchResults] = useState([]);
 
-    const messagesEndRef = useRef(null);
+    // Presence State
+    const [isOtherUserOnline, setIsOtherUserOnline] = useState(false);
+    const [isOtherUserTyping, setIsOtherUserTyping] = useState(false);
+    const presenceChannelRef = useRef(null);
+    const typingTimeoutRef = useRef(null);
 
+    const messagesEndRef = useRef(null);
     const activeConvIdRef = useRef(activeConvId);
 
     useEffect(() => {
@@ -44,6 +49,84 @@ export default function Messages() {
 
         return () => { supabase.removeChannel(channel); };
     }, [user]);
+
+    // Presence channel for active conversation
+    useEffect(() => {
+        if (!activeConvId || !user) return;
+
+        // Clean up previous presence channel
+        if (presenceChannelRef.current) {
+            supabase.removeChannel(presenceChannelRef.current);
+        }
+
+        const presenceChannel = supabase.channel(`presence:dm:${activeConvId}`, {
+            config: { presence: { key: user.id } }
+        });
+
+        presenceChannel
+            .on('presence', { event: 'sync' }, () => {
+                const state = presenceChannel.presenceState();
+                const otherUser = conversations.find(c => c.id === activeConvId)?.otherUser;
+                if (otherUser) {
+                    const otherPresence = state[otherUser.id];
+                    setIsOtherUserOnline(!!otherPresence && otherPresence.length > 0);
+                    const isTyping = otherPresence?.[0]?.isTyping || false;
+                    setIsOtherUserTyping(isTyping);
+                }
+            })
+            .on('presence', { event: 'join' }, ({ key }) => {
+                const otherUser = conversations.find(c => c.id === activeConvId)?.otherUser;
+                if (key === otherUser?.id) setIsOtherUserOnline(true);
+            })
+            .on('presence', { event: 'leave' }, ({ key }) => {
+                const otherUser = conversations.find(c => c.id === activeConvId)?.otherUser;
+                if (key === otherUser?.id) {
+                    setIsOtherUserOnline(false);
+                    setIsOtherUserTyping(false);
+                }
+            })
+            .subscribe(async (status) => {
+                if (status === 'SUBSCRIBED') {
+                    await presenceChannel.track({
+                        online_at: new Date().toISOString(),
+                        isTyping: false
+                    });
+                }
+            });
+
+        presenceChannelRef.current = presenceChannel;
+
+        return () => {
+            if (presenceChannelRef.current) {
+                supabase.removeChannel(presenceChannelRef.current);
+                presenceChannelRef.current = null;
+            }
+        };
+    }, [activeConvId, user, conversations]);
+
+    // Handle typing broadcast
+    const handleInputChange = useCallback((e) => {
+        const value = e.target.value;
+        setNewMessage(value);
+
+        if (presenceChannelRef.current) {
+            presenceChannelRef.current.track({
+                online_at: new Date().toISOString(),
+                isTyping: value.length > 0
+            });
+
+            // Clear typing after 2 seconds of inactivity
+            if (typingTimeoutRef.current) clearTimeout(typingTimeoutRef.current);
+            typingTimeoutRef.current = setTimeout(() => {
+                if (presenceChannelRef.current) {
+                    presenceChannelRef.current.track({
+                        online_at: new Date().toISOString(),
+                        isTyping: false
+                    });
+                }
+            }, 2000);
+        }
+    }, []);
 
     useEffect(() => {
         if (activeConvId) {
@@ -323,16 +406,30 @@ export default function Messages() {
                                 >
                                     <ChevronLeft className="w-6 h-6" />
                                 </button>
-                                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
-                                    {conversations.find(c => c.id === activeConvId)?.otherUser.username[0].toUpperCase()}
+                                <div className="relative">
+                                    <div className="w-8 h-8 rounded-full bg-gradient-to-br from-gray-700 to-gray-900 flex items-center justify-center text-white text-sm font-bold flex-shrink-0">
+                                        {conversations.find(c => c.id === activeConvId)?.otherUser.username[0].toUpperCase()}
+                                    </div>
+                                    {isOtherUserOnline && (
+                                        <span className="absolute bottom-0 right-0 w-2.5 h-2.5 bg-green-500 rounded-full border-2 border-background" />
+                                    )}
                                 </div>
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                     <h3 className="text-[rgb(var(--text-main))] font-bold flex items-center gap-2 truncate">
                                         {conversations.find(c => c.id === activeConvId)?.otherUser.username}
                                         <span className="hidden sm:inline">
                                             <UserBadge badges={conversations.find(c => c.id === activeConvId)?.otherUser.badges} />
                                         </span>
                                     </h3>
+                                    <p className="text-xs text-gray-500">
+                                        {isOtherUserTyping ? (
+                                            <span className="text-primary animate-pulse">typing...</span>
+                                        ) : isOtherUserOnline ? (
+                                            <span className="text-green-400">Online</span>
+                                        ) : (
+                                            <span>Offline</span>
+                                        )}
+                                    </p>
                                 </div>
                             </div >
 
@@ -366,7 +463,7 @@ export default function Messages() {
                                         className="flex-1 bg-background-lighter border border-glass-border rounded-xl px-4 py-2 text-sm text-[rgb(var(--text-main))] focus:outline-none focus:border-primary"
                                         placeholder="Type a message..."
                                         value={newMessage}
-                                        onChange={(e) => setNewMessage(e.target.value)}
+                                        onChange={handleInputChange}
                                     />
                                     <button disabled={!newMessage.trim()} type="submit" className="p-2 md:p-3 bg-primary rounded-xl text-white hover:bg-primary-glow transition-all disabled:opacity-50">
                                         <Send className="w-5 h-5" />
