@@ -159,7 +159,7 @@ export default function Profile() {
     if (!currentUser && !profileId) return (
         <div className="flex flex-col items-center justify-center py-20">
             <User className="w-16 h-16 text-gray-600 mb-4" />
-            <h2 className="text-xl font-bold text-white mb-2">Not Logged In</h2>
+            <h2 className="text-xl font-bold text-[rgb(var(--text-main))] mb-2">Not Logged In</h2>
             <p className="text-gray-400 mb-6">Please log in to view and manage your profile.</p>
             <Link to="/login">
                 <NeonButton>Go to Login</NeonButton>
@@ -167,7 +167,7 @@ export default function Profile() {
         </div>
     );
 
-    if (!profile && !profileId) return <div className="text-white text-center py-20">Loading profile...</div>;
+    if (!profile && !profileId) return <div className="text-[rgb(var(--text-main))] text-center py-20">Loading profile...</div>;
 
     return (
         <div className="max-w-6xl mx-auto space-y-8 pb-10">
@@ -227,7 +227,7 @@ export default function Profile() {
                             {editing && isOwnProfile ? (
                                 <div className="space-y-3 w-full">
                                     <input
-                                        className="bg-background-lighter border border-primary/50 rounded-lg px-4 py-2 text-white text-2xl font-bold w-full focus:outline-none focus:ring-2 ring-primary/20"
+                                        className="bg-background-lighter border border-primary/50 rounded-lg px-4 py-2 text-[rgb(var(--text-main))] text-2xl font-bold w-full focus:outline-none focus:ring-2 ring-primary/20"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
                                         placeholder="Username"
@@ -261,7 +261,7 @@ export default function Profile() {
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center md:justify-start gap-4">
-                                    <h2 className="text-4xl font-black text-white tracking-tight">{profile?.username || 'Student'}</h2>
+                                    <h2 className="text-4xl font-black text-[rgb(var(--text-main))] tracking-tight">{profile?.username || 'Student'}</h2>
                                     {isOwnProfile && (
                                         <button
                                             onClick={() => setEditing(true)}
@@ -317,7 +317,7 @@ export default function Profile() {
                                 {(profile?.study_style || isOwnProfile) && (
                                     <div className="col-span-1 md:col-span-2 bg-white/5 rounded-xl p-3 border border-white/5 flex items-center justify-between">
                                         <span className="text-xs text-gray-500 font-bold uppercase">Study Style</span>
-                                        <span className="text-sm text-white font-medium">{profile?.study_style || 'Not specified'}</span>
+                                        <span className="text-sm text-[rgb(var(--text-main))] font-medium">{profile?.study_style || 'Not specified'}</span>
                                     </div>
                                 )}
                             </div>
@@ -328,7 +328,7 @@ export default function Profile() {
                                 <span className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
                                     <Zap className="w-3 h-3 text-yellow-500 fill-current" /> XP Mastery
                                 </span>
-                                <span className="text-sm font-bold text-white">{profile?.xp || 0} / {((profile?.level || 1) * 100)} XP</span>
+                                <span className="text-sm font-bold text-[rgb(var(--text-main))]">{profile?.xp || 0} / {((profile?.level || 1) * 100)} XP</span>
                             </div>
                             <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
                                 <div
@@ -349,27 +349,7 @@ export default function Profile() {
                         </div>
                         <div className="text-right">
                             <p className="text-gray-400 text-xs font-bold uppercase tracking-tighter">Avg Score</p>
-                            <p className="text-2xl font-black text-white">{statsLoading ? '...' : `${stats.avgScore}%`}</p>
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard className="p-4 flex items-center justify-between border-accent/20 bg-accent/5">
-                        <div className="p-3 bg-accent/20 rounded-xl text-accent">
-                            <Award className="w-6 h-6" />
-                        </div>
-                        <div className="text-right">
-                            <p className="text-gray-400 text-xs font-bold uppercase tracking-tighter">Highest</p>
-                            <p className="text-2xl font-black text-white">{statsLoading ? '...' : `${stats.highestScore}%`}</p>
-                        </div>
-                    </GlassCard>
-
-                    <GlassCard className="p-4 flex items-center justify-between border-secondary/20 bg-secondary/5">
-                        <div className="p-3 bg-secondary/20 rounded-xl text-secondary">
-                            <Zap className="w-6 h-6" />
-                        </div>
-                        <div className="text-right">
-                            <p className="text-gray-400 text-xs font-bold uppercase tracking-tighter">Tests Taken</p>
-                            <p className="text-2xl font-black text-white">{statsLoading ? '...' : stats.totalTests}</p>
+                            <p className="text-2xl font-black text-[rgb(var(--text-main))]">{statsLoading ? '...' : stats.totalTests}</p>
                         </div>
                     </GlassCard>
                 </div>
@@ -377,7 +357,7 @@ export default function Profile() {
                 <div className="lg:col-span-3">
                     <GlassCard className="h-full">
                         <div className="flex items-center justify-between mb-6">
-                            <h3 className="text-xl font-bold text-white flex items-center gap-2">
+                            <h3 className="text-xl font-bold text-[rgb(var(--text-main))] flex items-center gap-2">
                                 <Clock className="w-5 h-5 text-primary" /> Recent Test Activity
                             </h3>
                         </div>
@@ -404,7 +384,7 @@ export default function Profile() {
                                     <tbody className="divide-y divide-white/5">
                                         {results.map((res) => (
                                             <tr key={res.id} className="group hover:bg-white/[0.02] transition-colors">
-                                                <td className="py-4 font-medium text-white group-hover:text-primary transition-colors">
+                                                <td className="py-4 font-medium text-[rgb(var(--text-main))] group-hover:text-primary transition-colors">
                                                     {res.test?.title}
                                                 </td>
                                                 <td className="py-4">

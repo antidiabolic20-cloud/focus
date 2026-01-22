@@ -59,7 +59,7 @@ export function Sidebar({ isOpen, onClose }) {
                         </div>
                         <div>
                             <p className="text-xs text-gray-400 font-medium">Daily Streak</p>
-                            <p className="text-sm font-bold text-white">{streak} Days 🔥</p>
+                            <p className="text-sm font-bold text-[rgb(var(--text-main))]">{streak} Days 🔥</p>
                         </div>
                     </div>
                 </div>

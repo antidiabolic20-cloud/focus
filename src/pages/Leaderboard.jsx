@@ -79,7 +79,7 @@ export default function Leaderboard() {
                                         rank <= 3 ? "bg-gradient-to-r from-white/5 to-transparent" : ""
                                     )}
                                 >
-                                    <div className="col-span-1 text-center font-bold text-white flex justify-center">
+                                    <div className="col-span-1 text-center font-bold text-[rgb(var(--text-main))] flex justify-center">
                                         {rankIcon || <span className="text-gray-500">#{rank}</span>}
                                     </div>
 
@@ -100,7 +100,7 @@ export default function Leaderboard() {
                                             </div>
                                         </div>
                                         <div>
-                                            <p className={cn("font-medium", isCurrentUser ? "text-primary" : "text-white")}>
+                                            <p className={cn("font-medium", isCurrentUser ? "text-primary" : "text-[rgb(var(--text-main))]")}>
                                                 {leader.username || 'Anonymous'} {isCurrentUser && "(You)"}
                                             </p>
                                         </div>
@@ -110,7 +110,7 @@ export default function Leaderboard() {
                                         Lvl {leader.level || 1}
                                     </div>
 
-                                    <div className="col-span-2 text-right font-bold text-white flex items-center justify-end gap-1">
+                                    <div className="col-span-2 text-right font-bold text-[rgb(var(--text-main))] flex items-center justify-end gap-1">
                                         {leader.xp || 0}
                                         <Zap className="w-3 h-3 text-yellow-400 fill-current" />
                                     </div>

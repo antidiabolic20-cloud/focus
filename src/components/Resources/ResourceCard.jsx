@@ -82,7 +82,7 @@ export function ResourceCard({ resource, onLike, onDelete }) {
                 )}
             </div>
 
-            <h3 className="font-bold text-white mb-1 truncate" title={resource.title}>{resource.title}</h3>
+            <h3 className="font-bold text-[rgb(var(--text-main))] mb-1 truncate" title={resource.title}>{resource.title}</h3>
             <p className="text-sm text-gray-400 mb-4 line-clamp-2 h-10">{resource.description}</p>
 
             <div className="flex items-center justify-between mt-auto pt-4 border-t border-glass-border">

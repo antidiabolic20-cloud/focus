@@ -77,21 +77,7 @@ export default function Analytics() {
                         <div className="p-2 bg-purple-500/20 text-purple-400 rounded-lg">
                             <Zap className="w-5 h-5 fill-current" />
                         </div>
-                        <h3 className="text-xl font-bold text-white">Topic Mastery</h3>
-                    </div>
-                    <PerformanceRadar data={performanceData} />
-                    <p className="mt-4 text-sm text-gray-500 text-center italic">
-                        Aggregated score across different subject categories.
-                    </p>
-                </GlassCard>
-
-                {/* Score Timeline */}
-                <GlassCard className="p-6 overflow-hidden">
-                    <div className="flex items-center gap-3 mb-6">
-                        <div className="p-2 bg-pink-500/20 text-pink-400 rounded-lg">
-                            <Calendar className="w-5 h-5" />
-                        </div>
-                        <h3 className="text-xl font-bold text-white">Score History</h3>
+                        <h3 className="text-xl font-bold text-[rgb(var(--text-main))]">Score History</h3>
                     </div>
                     <ActivityChart data={activityData} />
                     <p className="mt-4 text-sm text-gray-500 text-center italic">
@@ -102,7 +88,7 @@ export default function Analytics() {
 
             {/* Insights Section */}
             <GlassCard className="p-8 border-primary/20 bg-gradient-to-br from-primary/5 to-transparent">
-                <h3 className="text-lg font-bold text-white mb-4">Focus Insights</h3>
+                <h3 className="text-lg font-bold text-[rgb(var(--text-main))] mb-4">Focus Insights</h3>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                     <div className="space-y-4">
                         <InsightItem
@@ -132,7 +118,7 @@ function StatMetric({ title, value, icon: Icon, color }) {
                 <span className="text-sm text-gray-400">{title}</span>
                 <Icon className={`w-5 h-5 ${color}`} />
             </div>
-            <div className="text-2xl font-bold text-white group-hover:scale-105 transition-transform origin-left">{value}</div>
+            <div className="text-2xl font-bold text-[rgb(var(--text-main))] group-hover:scale-105 transition-transform origin-left">{value}</div>
         </GlassCard>
     );
 }

@@ -148,7 +148,7 @@ export default function Resources() {
                         placeholder="Search resources..."
                         value={searchQuery}
                         onChange={(e) => setSearchQuery(e.target.value)}
-                        className="w-full bg-background-lighter border border-glass-border rounded-xl pl-10 pr-4 py-2 text-white focus:outline-none focus:border-primary transition-colors"
+                        className="w-full bg-background-lighter border border-glass-border rounded-xl pl-10 pr-4 py-2 text-[rgb(var(--text-main))] focus:outline-none focus:border-primary transition-colors"
                     />
                 </div>
                 <div className="flex gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
@@ -194,7 +194,7 @@ export default function Resources() {
             {showUpload && (
                 <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
                     <GlassCard className="w-full max-w-lg relative animate-in fade-in zoom-in duration-200">
-                        <h2 className="text-xl font-bold text-white mb-6 flex items-center gap-2">
+                        <h2 className="text-xl font-bold text-[rgb(var(--text-main))] mb-6 flex items-center gap-2">
                             <Upload className="w-5 h-5 text-primary" />
                             Upload Resource
                         </h2>
@@ -206,7 +206,7 @@ export default function Resources() {
                                     required
                                     value={title}
                                     onChange={e => setTitle(e.target.value)}
-                                    className="w-full bg-background-lighter border border-glass-border rounded-lg px-4 py-2 text-white focus:border-primary outline-none"
+                                    className="w-full bg-background-lighter border border-glass-border rounded-lg px-4 py-2 text-[rgb(var(--text-main))] focus:border-primary outline-none"
                                     placeholder="e.g. Calculus Notes Chapter 1"
                                 />
                             </div>
@@ -216,7 +216,7 @@ export default function Resources() {
                                 <textarea
                                     value={description}
                                     onChange={e => setDescription(e.target.value)}
-                                    className="w-full bg-background-lighter border border-glass-border rounded-lg px-4 py-2 text-white focus:border-primary outline-none h-24 resize-none"
+                                    className="w-full bg-background-lighter border border-glass-border rounded-lg px-4 py-2 text-[rgb(var(--text-main))] focus:border-primary outline-none h-24 resize-none"
                                     placeholder="Briefly describe what this file contains..."
                                 />
                             </div>
@@ -227,7 +227,7 @@ export default function Resources() {
                                     <select
                                         value={subject}
                                         onChange={e => setSubject(e.target.value)}
-                                        className="w-full bg-background-lighter border border-glass-border rounded-lg px-4 py-2 text-white focus:border-primary outline-none"
+                                        className="w-full bg-background-lighter border border-glass-border rounded-lg px-4 py-2 text-[rgb(var(--text-main))] focus:border-primary outline-none"
                                     >
                                         {SUBJECTS.filter(s => s !== 'All').map(s => (
                                             <option key={s} value={s}>{s}</option>
