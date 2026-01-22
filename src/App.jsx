@@ -15,6 +15,7 @@ import GroupList from './pages/Groups/GroupList';
 import GroupDetail from './pages/Groups/GroupDetail';
 import Messages from './pages/Messages/Messages';
 import Community from './pages/Community';
+import Resources from './pages/Resources';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Analytics from './pages/Analytics';
@@ -42,6 +43,7 @@ function App() {
                 <Route path="groups" element={<GroupList />} />
                 <Route path="groups/:id" element={<GroupDetail />} />
                 <Route path="community" element={<Community />} />
+                <Route path="resources" element={<Resources />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="tests" element={<TestList />} />
                 <Route path="tests/:id" element={<TakeTest />} />

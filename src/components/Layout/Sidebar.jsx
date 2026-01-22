@@ -1,12 +1,12 @@
 import React from 'react';
 import { Logo } from '../UI/Logo';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy, Flame, Library } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
 export function Sidebar({ isOpen, onClose }) {
-    const { signOut } = useAuth();
+    const { signOut, streak } = useAuth();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -23,6 +23,7 @@ export function Sidebar({ isOpen, onClose }) {
         { icon: Trophy, label: 'Leaderboard', path: '/leaderboard' },
         { icon: MessageSquare, label: 'Forums', path: '/forums' },
         { icon: Users, label: 'Groups', path: '/groups' },
+        { icon: Library, label: 'Resources', path: '/resources' },
         { icon: FileText, label: 'Mock Tests', path: '/tests' },
         { icon: User, label: 'Profile', path: '/profile' },
     ];
@@ -46,6 +47,19 @@ export function Sidebar({ isOpen, onClose }) {
                     <button onClick={onClose} className="p-2 text-gray-400 hover:text-[rgb(var(--text-main))] md:hidden">
                         <X className="w-6 h-6" />
                     </button>
+                </div>
+
+                {/* Streak Banner */}
+                <div className="px-4 mb-2">
+                    <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-3 flex items-center gap-3">
+                        <div className="p-2 bg-orange-500/20 rounded-lg">
+                            <Flame className="w-5 h-5 text-orange-500 animate-pulse" />
+                        </div>
+                        <div>
+                            <p className="text-xs text-gray-400 font-medium">Daily Streak</p>
+                            <p className="text-sm font-bold text-white">{streak} Days 🔥</p>
+                        </div>
+                    </div>
                 </div>
 
                 <nav className="flex-1 px-4 space-y-2 mt-4">
