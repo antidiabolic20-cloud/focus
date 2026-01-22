@@ -6,19 +6,21 @@
 
 @layer base {
   :root {
-    /* Light Mode */
-    --background: 240 242 245;
-    /* Light Gray #F0F2F5 */
+    /* Light Mode - Refined for Clarity */
+    --background: 248 250 252;
+    /* Slate 50 - Cleaner & Brighter */
     --background-lighter: 255 255 255;
-    /* White */
-    --primary: 124 58 237;
-    /* Violet 600 */
-    --primary-glow: 139 92 246;
-    /* Violet 500 */
-    --glass: rgba(0, 0, 0, 0.05);
-    --glass-border: rgba(0, 0, 0, 0.1);
-    --text-main: 17 24 39;
-    /* Gray 900 */
+    /* Pure White */
+    --primary: 99 102 241;
+    /* Indigo 600 - More professional */
+    --primary-glow: 129 140 248;
+    /* Indigo 400 */
+    --glass: rgba(255, 255, 255, 0.7);
+    /* Frosted glass (white based) */
+    --glass-border: rgba(0, 0, 0, 0.08);
+    /* Subtle border */
+    --text-main: 15 23 42;
+    /* Slate 900 - Razor sharp contrast */
   }
 
   .dark {
