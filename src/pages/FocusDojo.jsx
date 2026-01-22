@@ -2,7 +2,6 @@ import React, { useState, useEffect, useRef } from 'react';
 import { GlassCard } from '../components/UI/GlassCard';
 import { Play, Pause, RotateCcw, Plus, Check, Trash2, Headphones, Music, Volume2, VolumeX } from 'lucide-react';
 import { cn } from '../lib/utils';
-import { format } from 'date-fns';
 
 export default function FocusDojo() {
     // Timer State
