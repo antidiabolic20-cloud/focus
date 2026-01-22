@@ -3,15 +3,32 @@ const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
 const SITE_NAME = 'Focus - Student Dashboard';
 
-// List of free models to try in order of preference (reliability/speed)
+// List of verified free models on OpenRouter (Jan 2026)
 const AI_MODELS = [
-    "deepseek/deepseek-r1-0528:free",           // Primary model
-    "google/gemini-2.0-flash-exp:free",         // Fast fallback
-    "meta-llama/llama-3.3-8b-instruct:free",    // Llama 3.3 (updated)
-    "qwen/qwen-2.5-7b-instruct:free",           // Qwen 2.5
-    "mistralai/mistral-7b-instruct-v0.3:free",  // Mistral v0.3
-    "openchat/openchat-7b:free"                 // OpenChat fallback
+    "meta-llama/llama-3.3-70b-instruct:free",     // Meta's flagship free model
+    "google/gemma-3-27b-it:free",                  // Google Gemma 3
+    "deepseek/deepseek-r1-0528:free",              // DeepSeek R1 (needs special parsing)
+    "arcee-ai/trinity-mini:free",                  // Arcee Trinity Mini
+    "liquidai/lfm2.5-1.2b-instruct:free",          // LiquidAI LFM
+    "meta-llama/llama-3.1-405b-instruct:free"      // Llama 3.1 405B
 ];
+
+// Extract JSON from various response formats including DeepSeek's <think> blocks
+function extractJSON(content) {
+    // Remove DeepSeek's <think>...</think> blocks
+    let cleaned = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
+
+    // Remove markdown code blocks
+    cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '');
+
+    // Try to find JSON object in the content
+    const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+    if (jsonMatch) {
+        return jsonMatch[0].trim();
+    }
+
+    return cleaned.trim();
+}
 
 export async function generateMockTest({ subject, chapter, difficulty, count, grade }) {
     if (!OPENROUTER_API_KEY) throw new Error("OpenRouter API Key Missing. Please set VITE_OPENROUTER_API_KEY in .env");
@@ -30,7 +47,7 @@ export async function generateMockTest({ subject, chapter, difficulty, count, gr
         3. Correct Option Index (0-3)
         4. Marks (default 5)
 
-        CRITICAL: Return ONLY valid JSON. No markdown, no comments, no backticks.
+        CRITICAL: Return ONLY valid JSON. No markdown, no comments, no backticks, no thinking text.
         Structure:
         {
           "title": "A short, academic title for this test",
@@ -64,11 +81,10 @@ export async function generateMockTest({ subject, chapter, difficulty, count, gr
                 body: JSON.stringify({
                     "model": model,
                     "messages": [
-                        { "role": "system", "content": "You are a JSON-only API. specific formatting is required." },
+                        { "role": "system", "content": "You are a JSON-only API. Return only valid JSON, no other text." },
                         { "role": "user", "content": prompt }
                     ],
-                    "temperature": 0.7,
-                    "response_format": { "type": "json_object" }
+                    "temperature": 0.7
                 })
             });
 
@@ -84,7 +100,7 @@ export async function generateMockTest({ subject, chapter, difficulty, count, gr
             }
 
             const content = data.choices[0].message.content;
-            const jsonString = content.replace(/```json/g, '').replace(/```/g, '').trim();
+            const jsonString = extractJSON(content);
 
             // Validate JSON before returning
             const parsed = JSON.parse(jsonString);
@@ -107,3 +123,4 @@ export async function generateMockTest({ subject, chapter, difficulty, count, gr
     console.error("All AI models failed. Last error:", lastError);
     throw new Error(`All generation attempts failed. Please try again later. Last error: ${lastError.message}`);
 }
+
