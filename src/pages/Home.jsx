@@ -161,7 +161,7 @@ export default function Home() {
                         <h3 className="text-[rgb(var(--text-main))] font-medium">Performance Trend</h3>
                         <Link to="/analytics" className="text-xs text-primary hover:text-primary-glow">Details</Link>
                     </div>
-                    <div className="h-[120px]">
+                    <div className="h-[150px] w-full">
                         <ActivityChart data={activityData.slice(-7)} />
                     </div>
                 </GlassCard>

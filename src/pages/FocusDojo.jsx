@@ -20,9 +20,9 @@ export default function FocusDojo() {
 
     const MUSIC_STREAMS = [
         { name: 'Lofi Girl', desc: 'Classic Focus Beats', url: 'https://stream.zeno.fm/0r0xa792kwzuv' },
-        { name: 'Jazz Lofi', desc: 'Smooth & Sophisticated', url: 'https://stream.zeno.fm/f36v6f6f979uv' },
-        { name: 'Deep Focus', desc: 'Ambient Soundscapes', url: 'https://stream.zeno.fm/7k9awqz3e8quv' },
-        { name: 'Nature Rain', desc: 'Soothing White Noise', url: 'https://stream.zeno.fm/4vrtv9bhkwzuv' }
+        { name: 'Chill Lofi', desc: 'Relaxing Vibes', url: 'https://stream.skydark.pl/lofi' },
+        { name: 'Jazz Cafe', desc: 'Smooth & Sophisticated', url: 'https://jazzradio.ice.infomaniak.ch/jazzradio-128.mp3' },
+        { name: 'Deep Focus', desc: 'Ambient Soundscapes', url: 'https://icecast.unitedradio.it/Relax.mp3' }
     ];
 
     const audioRef = useRef(new Audio(MUSIC_STREAMS[0].url));
@@ -41,15 +41,27 @@ export default function FocusDojo() {
 
     // Audio Logic
     useEffect(() => {
-        audioRef.current.volume = volume;
+        const audio = audioRef.current;
+        audio.volume = volume;
+
+        const handleError = (e) => {
+            console.error("Audio stream failed", e);
+            setIsPlaying(false);
+            // Don't alert here to avoid annoyance, but log it
+        };
+
+        audio.addEventListener('error', handleError);
+
         if (isPlaying) {
-            audioRef.current.play().catch(e => {
+            audio.play().catch(e => {
                 console.error("Audio play failed", e);
                 setIsPlaying(false);
             });
         } else {
-            audioRef.current.pause();
+            audio.pause();
         }
+
+        return () => audio.removeEventListener('error', handleError);
     }, [isPlaying, volume, currentStreamIndex]);
 
     const handleStreamChange = (index) => {
