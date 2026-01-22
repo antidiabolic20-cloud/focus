@@ -17,6 +17,7 @@ import Messages from './pages/Messages/Messages';
 import Community from './pages/Community';
 import Resources from './pages/Resources';
 import FocusDojo from './pages/FocusDojo';
+import StudyBuddy from './pages/StudyBuddy';
 import Login from './pages/Auth/Login';
 import Register from './pages/Auth/Register';
 import Analytics from './pages/Analytics';
@@ -46,6 +47,7 @@ function App() {
                 <Route path="community" element={<Community />} />
                 <Route path="resources" element={<Resources />} />
                 <Route path="focus" element={<FocusDojo />} />
+                <Route path="study-buddy" element={<StudyBuddy />} />
                 <Route path="messages" element={<Messages />} />
                 <Route path="tests" element={<TestList />} />
                 <Route path="tests/:id" element={<TakeTest />} />

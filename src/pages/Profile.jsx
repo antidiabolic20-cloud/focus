@@ -20,6 +20,9 @@ export default function Profile() {
     const [statsLoading, setStatsLoading] = useState(true);
     const [results, setResults] = useState([]);
     const [badges, setBadges] = useState([]);
+    const [academicGoals, setAcademicGoals] = useState('');
+    const [subjectsOfInterest, setSubjectsOfInterest] = useState('');
+    const [studyStyle, setStudyStyle] = useState('');
     const [stats, setStats] = useState({
         avgScore: 0,
         highestScore: 0,
@@ -35,7 +38,11 @@ export default function Profile() {
                 setUsername(myProfile.username);
                 const progress = myProfile.xp % 100;
                 setStats(prev => ({ ...prev, xpProgress: progress }));
+                setStats(prev => ({ ...prev, xpProgress: progress }));
                 setBadges(myProfile.badges || []);
+                setAcademicGoals(myProfile.academic_goals ? myProfile.academic_goals.join(', ') : '');
+                setSubjectsOfInterest(myProfile.subjects_of_interest ? myProfile.subjects_of_interest.join(', ') : '');
+                setStudyStyle(myProfile.study_style || '');
             }
         } else {
             setIsOwnProfile(false);
@@ -62,7 +69,11 @@ export default function Profile() {
             setUsername(data.username);
             const progress = data.xp % 100;
             setStats(prev => ({ ...prev, xpProgress: progress }));
+            setStats(prev => ({ ...prev, xpProgress: progress }));
             setBadges(data.badges || []);
+            setAcademicGoals(data.academic_goals ? data.academic_goals.join(', ') : '');
+            setSubjectsOfInterest(data.subjects_of_interest ? data.subjects_of_interest.join(', ') : '');
+            setStudyStyle(data.study_style || '');
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
@@ -126,7 +137,12 @@ export default function Profile() {
             setLoading(true);
             const { error } = await supabase
                 .from('profiles')
-                .update({ username })
+                .update({
+                    username,
+                    academic_goals: academicGoals.split(',').map(s => s.trim()).filter(Boolean),
+                    subjects_of_interest: subjectsOfInterest.split(',').map(s => s.trim()).filter(Boolean),
+                    study_style: studyStyle
+                })
                 .eq('id', currentUser.id);
 
             if (error) throw error;
@@ -209,18 +225,39 @@ export default function Profile() {
                             </div>
 
                             {editing && isOwnProfile ? (
-                                <div className="flex gap-2">
+                                <div className="space-y-3 w-full">
                                     <input
                                         className="bg-background-lighter border border-primary/50 rounded-lg px-4 py-2 text-white text-2xl font-bold w-full focus:outline-none focus:ring-2 ring-primary/20"
                                         value={username}
                                         onChange={(e) => setUsername(e.target.value)}
+                                        placeholder="Username"
                                         autoFocus
                                     />
-                                    <NeonButton size="sm" onClick={handleUpdateProfile} disabled={loading}>Save</NeonButton>
-                                    <button
-                                        onClick={() => setEditing(false)}
-                                        className="text-gray-400 hover:text-white px-2"
-                                    >Cancel</button>
+                                    <input
+                                        className="bg-background-lighter border border-glass-border rounded-lg px-3 py-1.5 text-white text-sm w-full focus:outline-none focus:border-primary"
+                                        value={academicGoals}
+                                        onChange={(e) => setAcademicGoals(e.target.value)}
+                                        placeholder="Academic Goals (comma separated)"
+                                    />
+                                    <input
+                                        className="bg-background-lighter border border-glass-border rounded-lg px-3 py-1.5 text-white text-sm w-full focus:outline-none focus:border-primary"
+                                        value={subjectsOfInterest}
+                                        onChange={(e) => setSubjectsOfInterest(e.target.value)}
+                                        placeholder="Interests (e.g. Math, Physics)"
+                                    />
+                                    <input
+                                        className="bg-background-lighter border border-glass-border rounded-lg px-3 py-1.5 text-white text-sm w-full focus:outline-none focus:border-primary"
+                                        value={studyStyle}
+                                        onChange={(e) => setStudyStyle(e.target.value)}
+                                        placeholder="Study Style (e.g. Visual, Late Night)"
+                                    />
+                                    <div className="flex gap-2 pt-2">
+                                        <NeonButton size="sm" onClick={handleUpdateProfile} disabled={loading}>Save Profile</NeonButton>
+                                        <button
+                                            onClick={() => setEditing(false)}
+                                            className="text-gray-400 hover:text-white px-2 text-sm"
+                                        >Cancel</button>
+                                    </div>
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center md:justify-start gap-4">
@@ -249,6 +286,42 @@ export default function Profile() {
                                 )}
                             </div>
                         </div>
+
+                        {/* Profile Details Display */}
+                        {!editing && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6">
+                                {(profile?.academic_goals?.length > 0 || isOwnProfile) && (
+                                    <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                        <p className="text-xs text-gray-500 font-bold uppercase mb-2">Academic Goals</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {profile?.academic_goals?.length > 0 ? (
+                                                profile.academic_goals.map((g, i) => (
+                                                    <span key={i} className="text-sm bg-primary/20 text-primary-light px-2 py-0.5 rounded-lg">{g}</span>
+                                                ))
+                                            ) : <span className="text-xs text-gray-600 italic">No goals set</span>}
+                                        </div>
+                                    </div>
+                                )}
+                                {(profile?.subjects_of_interest?.length > 0 || isOwnProfile) && (
+                                    <div className="bg-white/5 rounded-xl p-3 border border-white/5">
+                                        <p className="text-xs text-gray-500 font-bold uppercase mb-2">Interests</p>
+                                        <div className="flex flex-wrap gap-2">
+                                            {profile?.subjects_of_interest?.length > 0 ? (
+                                                profile.subjects_of_interest.map((s, i) => (
+                                                    <span key={i} className="text-sm bg-accent/20 text-accent-light px-2 py-0.5 rounded-lg">{s}</span>
+                                                ))
+                                            ) : <span className="text-xs text-gray-600 italic">No interests set</span>}
+                                        </div>
+                                    </div>
+                                )}
+                                {(profile?.study_style || isOwnProfile) && (
+                                    <div className="col-span-1 md:col-span-2 bg-white/5 rounded-xl p-3 border border-white/5 flex items-center justify-between">
+                                        <span className="text-xs text-gray-500 font-bold uppercase">Study Style</span>
+                                        <span className="text-sm text-white font-medium">{profile?.study_style || 'Not specified'}</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         <div className="max-w-md">
                             <div className="flex justify-between items-end mb-2">
