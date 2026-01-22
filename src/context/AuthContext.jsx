@@ -63,7 +63,14 @@ export function AuthProvider({ children }) {
 
             if (error && error.code === 'PGRST116') {
                 // Initialize streak if missing
-                await supabase.from('streaks').insert({ user_id: userId, current_streak: 1, last_login: new Date().toISOString() });
+                await supabase.from('streaks').upsert({ user_id: userId, current_streak: 1, last_login: new Date().toISOString() });
+                setStreak(1);
+                return;
+            }
+
+            if (!streakData) {
+                // Double check if data is null but no error
+                await supabase.from('streaks').upsert({ user_id: userId, current_streak: 1, last_login: new Date().toISOString() });
                 setStreak(1);
                 return;
             }
