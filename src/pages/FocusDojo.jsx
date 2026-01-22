@@ -16,7 +16,16 @@ export default function FocusDojo() {
     // Audio State
     const [isPlaying, setIsPlaying] = useState(false);
     const [volume, setVolume] = useState(0.5);
-    const audioRef = useRef(new Audio('https://stream.zeno.fm/0r0xa792kwzuv')); // Lofi Girl Stream or similar free stream
+    const [currentStreamIndex, setCurrentStreamIndex] = useState(0);
+
+    const MUSIC_STREAMS = [
+        { name: 'Lofi Girl', desc: 'Classic Focus Beats', url: 'https://stream.zeno.fm/0r0xa792kwzuv' },
+        { name: 'Jazz Lofi', desc: 'Smooth & Sophisticated', url: 'https://stream.zeno.fm/f36v6f6f979uv' },
+        { name: 'Deep Focus', desc: 'Ambient Soundscapes', url: 'https://stream.zeno.fm/7k9awqz3e8quv' },
+        { name: 'Nature Rain', desc: 'Soothing White Noise', url: 'https://stream.zeno.fm/4vrtv9bhkwzuv' }
+    ];
+
+    const audioRef = useRef(new Audio(MUSIC_STREAMS[0].url));
 
     // Timer Logic
     useEffect(() => {
@@ -26,7 +35,6 @@ export default function FocusDojo() {
         } else if (timeLeft === 0) {
             setIsActive(false);
             new Audio('/notification.mp3').play().catch(() => { }); // Simple beep if available, or just stop
-            // Auto switch modes logic could go here
         }
         return () => clearInterval(interval);
     }, [isActive, timeLeft]);
@@ -42,7 +50,19 @@ export default function FocusDojo() {
         } else {
             audioRef.current.pause();
         }
-    }, [isPlaying, volume]);
+    }, [isPlaying, volume, currentStreamIndex]);
+
+    const handleStreamChange = (index) => {
+        const wasPlaying = isPlaying;
+        setIsPlaying(false);
+        audioRef.current.pause();
+        audioRef.current.src = MUSIC_STREAMS[index].url;
+        audioRef.current.load();
+        setCurrentStreamIndex(index);
+        if (wasPlaying) {
+            setIsPlaying(true);
+        }
+    };
 
     const toggleTimer = () => setIsActive(!isActive);
 
@@ -150,33 +170,67 @@ export default function FocusDojo() {
                 <div className="space-y-6">
                     {/* Music Player */}
                     <GlassCard className="p-6 relative overflow-hidden">
-                        <div className="relative z-10 flex items-center gap-4">
-                            <div className={cn(
-                                "w-12 h-12 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center transition-all",
-                                isPlaying && "animate-pulse"
-                            )}>
-                                <Music className="w-6 h-6 text-white" />
+                        <div className="relative z-10 space-y-6">
+                            <div className="flex items-center gap-4">
+                                <div className={cn(
+                                    "w-12 h-12 rounded-lg bg-gradient-to-br from-violet-500 to-fuchsia-500 flex items-center justify-center transition-all",
+                                    isPlaying && "animate-pulse"
+                                )}>
+                                    <Music className="w-6 h-6 text-white" />
+                                </div>
+                                <div className="flex-1">
+                                    <h3 className="font-bold text-white">{MUSIC_STREAMS[currentStreamIndex].name}</h3>
+                                    <p className="text-xs text-gray-400">{MUSIC_STREAMS[currentStreamIndex].desc}</p>
+                                </div>
+                                <div className="flex items-center gap-2">
+                                    <div className="flex items-center gap-2 mr-4 bg-white/5 p-1 rounded-lg">
+                                        <Volume2 className="w-4 h-4 text-gray-500" />
+                                        <input
+                                            type="range"
+                                            min="0"
+                                            max="1"
+                                            step="0.01"
+                                            value={volume}
+                                            onChange={(e) => setVolume(parseFloat(e.target.value))}
+                                            className="w-20 accent-primary"
+                                        />
+                                    </div>
+                                    <button
+                                        onClick={() => setIsPlaying(!isPlaying)}
+                                        className="p-3 rounded-full bg-primary/20 hover:bg-primary text-primary hover:text-white transition-all"
+                                    >
+                                        {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
+                                    </button>
+                                </div>
                             </div>
-                            <div className="flex-1">
-                                <h3 className="font-bold text-white">Lofi & Chill</h3>
-                                <p className="text-xs text-gray-400">Focus Beats / Hip Hop</p>
+
+                            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                                {MUSIC_STREAMS.map((stream, idx) => (
+                                    <button
+                                        key={idx}
+                                        onClick={() => handleStreamChange(idx)}
+                                        className={cn(
+                                            "px-3 py-2 rounded-lg text-xs font-medium transition-all text-center",
+                                            currentStreamIndex === idx
+                                                ? "bg-primary text-white shadow-lg"
+                                                : "bg-white/5 text-gray-400 hover:text-white hover:bg-white/10"
+                                        )}
+                                    >
+                                        {stream.name}
+                                    </button>
+                                ))}
                             </div>
-                            <button
-                                onClick={() => setIsPlaying(!isPlaying)}
-                                className="p-3 rounded-full bg-white/10 hover:bg-white/20 text-white transition-colors"
-                            >
-                                {isPlaying ? <Pause className="w-5 h-5 fill-current" /> : <Play className="w-5 h-5 fill-current ml-1" />}
-                            </button>
                         </div>
+
                         {/* Simple Visualizer Bars */}
                         {isPlaying && (
-                            <div className="absolute  bottom-0 left-0 right-0 h-1 flex items-end justify-center gap-1 opacity-50 px-6 pb-6">
-                                {[...Array(20)].map((_, i) => (
+                            <div className="absolute bottom-0 left-0 right-0 h-1 flex items-end justify-center gap-1 opacity-20">
+                                {[...Array(30)].map((_, i) => (
                                     <div
                                         key={i}
                                         className="w-1 bg-primary rounded-t-sm animate-bounce"
                                         style={{
-                                            height: `${Math.random() * 100}%`,
+                                            height: `${20 + Math.random() * 80}%`,
                                             animationDuration: `${0.5 + Math.random()}s`
                                         }}
                                     />
