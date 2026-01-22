@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Send, Plus, Search, MessageSquare, ChevronLeft, Circle } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { UserBadge } from '../../components/UI/UserBadge';
+import { playNotificationSound } from '../../lib/sounds';
 
 export default function Messages() {
     const { user, profile } = useAuth();
@@ -144,6 +145,11 @@ export default function Messages() {
     };
 
     async function handleRealtimeMessage(msg) {
+        // Play sound for messages from others
+        if (msg.sender_id !== user.id) {
+            playNotificationSound();
+        }
+
         // Use ref to check current active conversation without stale closure
         if (activeConvIdRef.current && msg.conversation_id === activeConvIdRef.current) {
             setMessages(prev => {

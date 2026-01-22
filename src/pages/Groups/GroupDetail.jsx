@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { Send, Users, Shield, Copy, Check, MessageSquare } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { UserBadge } from '../../components/UI/UserBadge';
+import { playNotificationSound } from '../../lib/sounds';
 
 export default function GroupDetail() {
     const { id } = useParams();
@@ -145,6 +146,11 @@ export default function GroupDetail() {
             .single();
 
         if (data) {
+            // Play sound for messages from others
+            if (data.author_id !== user.id) {
+                playNotificationSound();
+            }
+
             setMessages(prev => {
                 // Check again to avoid race conditions with optimistic updates
                 const exists = prev.find(m => m.id === data.id);
