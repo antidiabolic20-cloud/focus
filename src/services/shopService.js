@@ -80,7 +80,7 @@ export const shopService = {
 
         // Simpler approach: 
         // Get all user inventory items with their types
-        const { data: inventory } = await this.getUserInventory(userId);
+        const inventory = await this.getUserInventory(userId);
 
         const itemsToUnequip = inventory
             .filter(i => i.item.type === itemType && i.is_equipped)
