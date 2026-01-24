@@ -4,6 +4,7 @@ import { GlassCard } from '../components/UI/GlassCard';
 import { NeonButton } from '../components/UI/NeonButton';
 import { useAuth } from '../context/AuthContext';
 import { supabase } from '../lib/supabase';
+import { shopService } from '../services/shopService';
 import { User, Mail, Award, Calendar, TrendingUp, Zap, Clock, ChevronRight, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { UserBadge } from '../components/UI/UserBadge';
@@ -29,6 +30,7 @@ export default function Profile() {
         totalTests: 0,
         xpProgress: 0
     });
+    const [equippedItems, setEquippedItems] = useState({ frame: null, title: null });
 
     useEffect(() => {
         if (!profileId || (currentUser && profileId === currentUser.id)) {
@@ -74,6 +76,13 @@ export default function Profile() {
             setAcademicGoals(data.academic_goals ? data.academic_goals.join(', ') : '');
             setSubjectsOfInterest(data.subjects_of_interest ? data.subjects_of_interest.join(', ') : '');
             setStudyStyle(data.study_style || '');
+
+            // Fetch Inventory for cosmetics
+            const inv = await shopService.getUserInventory(id);
+            const frame = inv.find(i => i.is_equipped && i.item.type === 'frame');
+            const title = inv.find(i => i.is_equipped && i.item.type === 'title');
+            setEquippedItems({ frame: frame?.item, title: title?.item });
+
         } catch (error) {
             console.error('Error fetching profile:', error);
         }
@@ -210,6 +219,10 @@ export default function Profile() {
                                     </div>
                                 )}
                             </div>
+                            {/* Equipped Frame Overlay */}
+                            {equippedItems.frame && (
+                                <div className={cn("absolute inset-0 rounded-[1.4rem] pointer-events-none border-[6px]", equippedItems.frame.value)}></div>
+                            )}
                         </div>
                         <div className="absolute -bottom-2 -right-2 bg-background-lighter border border-glass-border rounded-xl px-3 py-1 shadow-xl">
                             <span className="text-xs font-bold text-primary-glow flex items-center gap-1">
@@ -261,7 +274,16 @@ export default function Profile() {
                                 </div>
                             ) : (
                                 <div className="flex items-center justify-center md:justify-start gap-4">
-                                    <h2 className="text-4xl font-black text-[rgb(var(--text-main))] tracking-tight">{profile?.username || 'Student'}</h2>
+                                    <div className="flex flex-col items-start gap-1">
+                                        <h2 className="text-4xl font-black text-[rgb(var(--text-main))] tracking-tight flex items-center gap-3">
+                                            {profile?.username || 'Student'}
+                                            {equippedItems.title && (
+                                                <span className="text-sm px-2 py-0.5 rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-500 font-bold uppercase tracking-wider">
+                                                    {equippedItems.title.value}
+                                                </span>
+                                            )}
+                                        </h2>
+                                    </div>
                                     {isOwnProfile && (
                                         <button
                                             onClick={() => setEditing(true)}

@@ -23,6 +23,7 @@ import Register from './pages/Auth/Register';
 import Analytics from './pages/Analytics';
 import BattleLobby from './pages/Battle/BattleLobby';
 import BattleArena from './pages/Battle/BattleArena';
+import Shop from './pages/Shop';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -56,6 +57,7 @@ function App() {
                 <Route path="analytics" element={<Analytics />} />
                 <Route path="battle" element={<BattleLobby />} />
                 <Route path="battle/:id" element={<BattleArena />} />
+                <Route path="shop" element={<Shop />} />
                 <Route path="profile" element={<Profile />} />
                 <Route path="profile/:id" element={<Profile />} />
               </Route>

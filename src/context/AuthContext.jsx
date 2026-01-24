@@ -61,16 +61,12 @@ export function AuthProvider({ children }) {
                 .eq('user_id', userId)
                 .single();
 
+            const today = new Date();
+            const toDateString = (date) => date.toISOString().split('T')[0];
+
             if (error && error.code === 'PGRST116') {
                 // Initialize streak if missing
-                await supabase.from('streaks').upsert({ user_id: userId, current_streak: 1, last_login: new Date().toISOString() });
-                setStreak(1);
-                return;
-            }
-
-            if (!streakData) {
-                // Double check if data is null but no error
-                await supabase.from('streaks').upsert({ user_id: userId, current_streak: 1, last_login: new Date().toISOString() });
+                await supabase.from('streaks').upsert({ user_id: userId, current_streak: 1, last_login: today.toISOString() });
                 setStreak(1);
                 return;
             }
@@ -79,33 +75,43 @@ export function AuthProvider({ children }) {
             setStreak(streakData.current_streak);
 
             const lastLogin = new Date(streakData.last_login);
-            const today = new Date();
-
-            // normalize to YYYY-MM-DD to ignore time
-            const toDateString = (date) => date.toISOString().split('T')[0];
 
             if (toDateString(lastLogin) === toDateString(today)) {
                 return; // Already logged in today
             }
 
-            const isConsecutive = (toDateString(today) ===
-                toDateString(new Date(lastLogin.setDate(lastLogin.getDate() + 1))));
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+
+            const isConsecutive = (toDateString(lastLogin) === toDateString(yesterday));
 
             if (isConsecutive) {
                 // Increment streak
                 const newStreak = streakData.current_streak + 1;
                 await supabase.from('streaks').update({
                     current_streak: newStreak,
-                    last_login: new Date().toISOString()
+                    last_login: today.toISOString()
                 }).eq('user_id', userId);
                 setStreak(newStreak);
             } else {
-                // Reset streak (unless frozen - TODO: Freeze logic)
-                await supabase.from('streaks').update({
-                    current_streak: 1,
-                    last_login: new Date().toISOString()
-                }).eq('user_id', userId);
-                setStreak(1);
+                // MISSED A DAY - CHECK FOR FREEZE
+                if (streakData.freeze_items > 0) {
+                    // Consume Freeze
+                    await supabase.from('streaks').update({
+                        freeze_items: streakData.freeze_items - 1,
+                        last_login: today.toISOString() // Mark as active today to maintain chain for tomorrow
+                        // Don't increment streak, but don't reset. Just update date.
+                    }).eq('user_id', userId);
+                    console.log("Streak Saved by Freeze!");
+                    // Toast notification could go here
+                } else {
+                    // Reset streak
+                    await supabase.from('streaks').update({
+                        current_streak: 1,
+                        last_login: today.toISOString()
+                    }).eq('user_id', userId);
+                    setStreak(1);
+                }
             }
         } catch (err) {
             console.error("Error checking streak:", err);

@@ -1,7 +1,7 @@
 import React from 'react';
 import { Logo } from '../UI/Logo';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy, Flame, Library, Headphones, Handshake } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy, Flame, Library, Headphones, Handshake, ShoppingBag } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 
@@ -26,6 +26,7 @@ export function Sidebar({ isOpen, onClose }) {
         { icon: Library, label: 'Resources', path: '/resources' },
         { icon: Headphones, label: 'Focus Dojo', path: '/focus' },
         { icon: Handshake, label: 'Study Buddy', path: '/study-buddy' },
+        { icon: ShoppingBag, label: 'XP Shop', path: '/shop' },
         { icon: FileText, label: 'Mock Tests', path: '/tests' },
         { icon: User, label: 'Profile', path: '/profile' },
     ];
