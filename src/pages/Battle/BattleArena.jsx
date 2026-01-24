@@ -55,10 +55,8 @@ export default function BattleArena() {
                 table: 'battles',
                 filter: `id=eq.${id}`
             }, (payload) => {
+                console.log("Battle Update:", payload.new);
                 setBattle(prev => ({ ...prev, ...payload.new }));
-                if (payload.new.status === 'active' && gameState === 'waiting_opponent') {
-                    startCountdown();
-                }
             })
             .subscribe();
 
@@ -69,35 +67,40 @@ export default function BattleArena() {
         };
     }, [id, user]);
 
+    // Unified Sync Countdown Logic
+    useEffect(() => {
+        if (battle?.status === 'active' && battle?.starts_at) {
+            const timer = setInterval(() => {
+                const now = Date.now();
+                const start = new Date(battle.starts_at).getTime();
+                const diff = Math.ceil((start - now) / 1000);
+
+                if (diff > 0) {
+                    setStartingIn(diff);
+                } else {
+                    setStartingIn(null);
+                    setGameState('active');
+                    clearInterval(timer);
+                }
+            }, 500);
+            return () => clearInterval(timer);
+        }
+    }, [battle?.starts_at, battle?.status]);
+
     // Check wait status
     useEffect(() => {
         if (battle) {
-            // STRICT CHECK: Only active if BOTH players exist
-            if (battle.opponent_id && battle.status === 'active') {
-                if (gameState !== 'active') startCountdown();
+            if (battle.status === 'waiting') {
+                setGameState('waiting_opponent');
             } else if (battle.status === 'completed') {
                 finishGame(battle.winner_id === user.id);
-            } else {
-                setGameState('waiting_opponent');
             }
         }
-    }, [battle]);
+    }, [battle?.status]);
 
     // ... (rest of code) ...
 
-    function startCountdown() {
-        setStartingIn(3);
-        const timer = setInterval(() => {
-            setStartingIn(prev => {
-                if (prev <= 1) {
-                    clearInterval(timer);
-                    setGameState('active');
-                    return null;
-                }
-                return prev - 1;
-            });
-        }, 1000);
-    }
+
 
     if (gameState === 'waiting_opponent') {
         return (
@@ -232,13 +235,16 @@ export default function BattleArena() {
     const currentQ = questions[currentQIndex];
     if (!currentQ && gameState === 'active') return <div>Error loading question</div>;
 
+    const me = battle.player1?.id === user.id ? battle.player1 : battle.player2;
+    const opponent = battle.player1?.id === user.id ? battle.player2 : battle.player1;
+
     return (
         <div className="max-w-6xl mx-auto p-4 flex flex-col md:flex-row gap-6 min-h-[80vh]">
             {/* Left: Player (You) */}
             <div className="w-full md:w-1/4 p-4 border border-glass-border bg-background/50 rounded-2xl flex flex-col items-center">
-                <img src={battle.player1?.id === user.id ? battle.player1.avatar_url : battle.player2?.avatar_url || 'https://via.placeholder.com/150'} className="w-20 h-20 rounded-full border-4 border-green-500 mb-4" />
+                <img src={me?.avatar_url || `https://ui-avatars.com/api/?name=${me?.username || 'You'}`} className="w-20 h-20 rounded-full border-4 border-green-500 mb-4" />
                 <h3 className="font-bold text-white text-lg">
-                    {battle.player1?.id === user.id ? battle.player1?.username : battle.player2?.username} <span className="text-gray-400 text-sm">(You)</span>
+                    {me?.username} <span className="text-gray-400 text-sm">(You)</span>
                 </h3>
                 <div className="w-full bg-gray-800 h-6 rounded-full mt-4 overflow-hidden relative">
                     <div
@@ -254,7 +260,7 @@ export default function BattleArena() {
             <div className="flex-1 flex flex-col justify-center">
                 <GlassCard className={cn(
                     "p-8 min-h-[400px] flex flex-col justify-center transition-all",
-                    isFrozen ? "opacity-50 grayscale pointer-events-none border-red-500/50" : "border-primary/50"
+                    (isFrozen || startingIn) ? "opacity-50 grayscale pointer-events-none border-red-500/50" : "border-primary/50"
                 )}>
                     <span className="text-center text-gray-500 uppercase tracking-widest text-sm mb-4">Question {currentQIndex + 1}</span>
                     <h2 className="text-2xl font-bold text-white text-center mb-8">{currentQ.content}</h2>
@@ -276,9 +282,9 @@ export default function BattleArena() {
 
             {/* Right: Opponent */}
             <div className="w-full md:w-1/4 p-4 border border-glass-border bg-background/50 rounded-2xl flex flex-col items-center opacity-80">
-                <img src={battle.player1?.id !== user.id ? battle.player1?.avatar_url : battle.player2?.avatar_url || 'https://via.placeholder.com/150'} className="w-20 h-20 rounded-full border-4 border-red-500 mb-4" />
+                <img src={opponent?.avatar_url || `https://ui-avatars.com/api/?name=${opponent?.username || 'Rival'}`} className="w-20 h-20 rounded-full border-4 border-red-500 mb-4" />
                 <h3 className="font-bold text-white text-lg">
-                    {battle.player1?.id !== user.id ? battle.player1?.username : battle.player2?.username} <span className="text-gray-400 text-sm">(Opponent)</span>
+                    {opponent?.username || 'Searching...'} <span className="text-gray-400 text-sm">(Opponent)</span>
                 </h3>
                 <div className="w-full bg-gray-800 h-6 rounded-full mt-4 overflow-hidden relative">
                     <div

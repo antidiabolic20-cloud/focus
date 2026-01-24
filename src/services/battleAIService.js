@@ -2,28 +2,40 @@ const OPENROUTER_API_KEY = import.meta.env.VITE_OPENROUTER_API_KEY;
 const SITE_URL = import.meta.env.VITE_SITE_URL || 'http://localhost:5173';
 const SITE_NAME = 'Focus - Student Dashboard';
 
-// Updated list of ACTUALLY working free models on OpenRouter (Jan 2026)
+// Verified free models
 const AI_MODELS = [
+    "meta-llama/llama-3.3-70b-instruct:free",
+    "google/gemma-3-27b-it:free",
     "deepseek/deepseek-r1-0528:free",
-    "qwen/qwen-2.5-72b-instruct:free",
-    "nvidia/llama-3.1-nemotron-70b-instruct:free",
-    "google/gemma-2-9b-it:free"
+    "arcee-ai/trinity-mini:free",
+    "qwen/qwen-2.5-72b-instruct:free"
 ];
+
+function extractJSON(content) {
+    // Remove DeepSeek's <think> blocks
+    let cleaned = content.replace(/<think>[\s\S]*?<\/think>/gi, '');
+    // Remove markdown code blocks
+    cleaned = cleaned.replace(/```json/gi, '').replace(/```/g, '');
+    // Find JSON array or object
+    const jsonMatch = cleaned.match(/\[[\s\S]*\]/);
+    if (jsonMatch) return jsonMatch[0].trim();
+    return cleaned.trim();
+}
 
 export const battleAIService = {
     async generateBattleQuestions(categoryName = 'General Knowledge') {
         const prompt = `Generate exactly 5 multiple choice quiz questions about ${categoryName}.
+        
+        Return ONLY a valid JSON array with this exact structure:
+        [
+          {"content": "Question text?", "options": ["A", "B", "C", "D"], "correct_option": 0},
+          ...
+        ]
+        
+        Important: correct_option is the index (0-3). 
+        Make sure questions are unique and diverse. 
+        Seed: ${Date.now()}`;
 
-Return ONLY a valid JSON array with this exact structure (no other text):
-[
-  {"content": "Question text?", "options": ["A", "B", "C", "D"], "correct_option": 0},
-  {"content": "Question text?", "options": ["A", "B", "C", "D"], "correct_option": 1}
-]
-
-Important: correct_option is the index (0-3) of the correct answer.
-Make questions interesting and unique. Seed: ${Date.now()}`;
-
-        // Try each model until one works
         for (const model of AI_MODELS) {
             try {
                 console.log(`[Battle AI] Trying model: ${model}`);
@@ -39,55 +51,30 @@ Make questions interesting and unique. Seed: ${Date.now()}`;
                     body: JSON.stringify({
                         "model": model,
                         "messages": [
+                            { "role": "system", "content": "You are a JSON-only quiz generator. Output ONLY valid JSON arrays." },
                             { "role": "user", "content": prompt }
                         ],
-                        "temperature": 0.8,
-                        "max_tokens": 2000
+                        "temperature": 0.8
                     })
                 });
 
-                if (!response.ok) {
-                    const errText = await response.text();
-                    console.warn(`[Battle AI] Model ${model} HTTP error: ${errText}`);
-                    continue;
-                }
+                if (!response.ok) continue;
 
                 const data = await response.json();
+                const content = data.choices[0].message.content;
+                const jsonString = extractJSON(content);
+                const parsed = JSON.parse(jsonString);
 
-                if (!data.choices || !data.choices[0] || !data.choices[0].message) {
-                    console.warn(`[Battle AI] Model ${model} returned invalid structure`);
-                    continue;
+                if (Array.isArray(parsed) && parsed.length >= 5) {
+                    console.log(`[Battle AI] Success with ${model}`);
+                    return parsed.slice(0, 5);
                 }
-
-                let content = data.choices[0].message.content;
-
-                // Clean up the response - extract JSON array
-                content = content.replace(/```json/gi, '').replace(/```/g, '').trim();
-
-                // Find the JSON array in the response
-                const jsonMatch = content.match(/\[[\s\S]*\]/);
-                if (!jsonMatch) {
-                    console.warn(`[Battle AI] Model ${model} - no JSON array found in response`);
-                    continue;
-                }
-
-                const parsed = JSON.parse(jsonMatch[0]);
-
-                if (!Array.isArray(parsed) || parsed.length < 5) {
-                    console.warn(`[Battle AI] Model ${model} - invalid array length`);
-                    continue;
-                }
-
-                console.log(`[Battle AI] Success with model: ${model}`);
-                return parsed.slice(0, 5); // Ensure exactly 5 questions
-
             } catch (error) {
-                console.warn(`[Battle AI] Error with ${model}:`, error.message);
+                console.warn(`[Battle AI] Failed with ${model}:`, error.message);
             }
         }
 
-        // Fallback questions if all AI fails
-        console.error("[Battle AI] All models failed, using fallback questions");
+        console.error("[Battle AI] All models failed, using fallbacks");
         return this.getFallbackQuestions(categoryName);
     },
 
@@ -131,8 +118,6 @@ Make questions interesting and unique. Seed: ${Date.now()}`;
             { content: "What is 5 x 5?", options: ["10", "20", "25", "30"], correct_option: 2 }
         ];
 
-        // Return specific category fallback OR default if logic fails
-        // Slice to ensuring exactly 5 not needed if hardcoded 5, but safe to keep
         return fallbacks[categoryName] || defaultQs;
     }
 };

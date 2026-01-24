@@ -29,7 +29,11 @@ export const battleService = {
             const battle = availableBattles[0];
             const { data: joinedBattle, error: joinError } = await supabase
                 .from('battles')
-                .update({ status: 'active', opponent_id: userId })
+                .update({
+                    status: 'active',
+                    opponent_id: userId,
+                    starts_at: new Date(Date.now() + 5000).toISOString() // Start in 5 seconds
+                })
                 .eq('id', battle.id)
                 .select()
                 .single();
@@ -96,8 +100,8 @@ export const battleService = {
             .from('battles')
             .select(`
             *,
-            player1:profiles!created_by(username, avatar_url),
-            player2:profiles!opponent_id(username, avatar_url)
+            player1:profiles!created_by(id, username, avatar_url),
+            player2:profiles!opponent_id(id, username, avatar_url)
         `)
             .eq('id', battleId)
             .single();
