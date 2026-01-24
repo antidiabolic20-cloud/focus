@@ -19,10 +19,10 @@ export default function FocusDojo() {
     const [currentStreamIndex, setCurrentStreamIndex] = useState(0);
 
     const MUSIC_STREAMS = [
-        { name: 'Lofi Girl', desc: 'Classic Focus Beats', url: 'https://stream.zeno.fm/0r0xa792kwzuv' },
-        { name: 'Lofi Radio', desc: 'Chillhop & Beats', url: 'https://lofiradio.ru/mount_point/lofi_mp3_128' },
-        { name: 'Smooth Jazz', desc: 'Sophisticated Vibes', url: 'https://jazzradio.ice.infomaniak.ch/jazzradio-high.mp3' },
-        { name: 'Rainy Night', desc: 'Soothing Ambience', url: 'https://streaming.radio.co/s77977a685/listen' }
+        { name: 'Deep Focus', desc: 'Ambient Study', url: '/music/study-110111.mp3' },
+        { name: 'School Vibes', desc: 'Learning Beats', url: '/music/school-learning-study-music-260562.mp3' },
+        { name: 'Mars Lofi', desc: 'Chillhop Relax', url: '/music/mars-lofi-study-beat-beats-to-relax-chillhop-122874.mp3' },
+        { name: 'Calm Peace', desc: 'Peaceful Flow', url: '/music/lofi-study-calm-peaceful-chill-hop-112191.mp3' }
     ];
 
     const audioRef = useRef(new Audio(MUSIC_STREAMS[0].url));
