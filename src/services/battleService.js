@@ -5,8 +5,8 @@ export const battleService = {
     /**
      * Finds an existing waiting battle or creates a new one
      */
-    async findOrCreateBattle(userId, categoryId = null) {
-        // 1. Try to find an open battle (status = waiting)
+    async findOrCreateBattle(userId, categoryName = 'General Knowledge') {
+        // 1. Try to find an open battle (status = waiting) with same category
         let query = supabase
             .from('battles')
             .select('*')
@@ -14,8 +14,8 @@ export const battleService = {
             .neq('created_by', userId) // Don't join your own battle
             .limit(1);
 
-        if (categoryId) {
-            query = query.eq('category_id', categoryId);
+        if (categoryName) {
+            query = query.eq('category_name', categoryName);
         }
 
         const { data: availableBattles, error } = await query;
@@ -45,15 +45,15 @@ export const battleService = {
             return { battle: joinedBattle, role: 'opponent' };
         } else {
             // CREATE NEW BATTLE
-            // Fetch 5 random questions first
-            const questions = await this.fetchRandomQuestions(categoryId);
+            // Fetch 5 random questions for this category
+            const questions = await this.fetchRandomQuestions(categoryName);
 
             const { data: newBattle, error: createError } = await supabase
                 .from('battles')
                 .insert({
                     created_by: userId,
                     status: 'waiting',
-                    category_id: categoryId,
+                    category_name: categoryName,
                     questions: questions
                 })
                 .select()
@@ -80,10 +80,8 @@ export const battleService = {
         });
     },
 
-    async fetchRandomQuestions(categoryId) {
-        // Use AI to generate questions
-        // In future, we can look up category name from categoryId
-        return await battleAIService.generateBattleQuestions('General Knowledge');
+    async fetchRandomQuestions(categoryName) {
+        return await battleAIService.generateBattleQuestions(categoryName || 'General Knowledge');
     },
 
     async updateProgress(progressId, updates) {

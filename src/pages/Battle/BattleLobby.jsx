@@ -10,6 +10,7 @@ export default function BattleLobby() {
     const { user } = useAuth();
     const navigate = useNavigate();
     const [searching, setSearching] = useState(false);
+    const [selectedSubject, setSelectedSubject] = useState('General Knowledge');
     const [error, setError] = useState('');
 
     const handleFindMatch = async () => {
@@ -21,7 +22,7 @@ export default function BattleLobby() {
             // Simulate scanning effect
             await new Promise(r => setTimeout(r, 1500));
 
-            const { battle, role } = await battleService.findOrCreateBattle(user.id);
+            const { battle, role } = await battleService.findOrCreateBattle(user.id, selectedSubject);
             navigate(`/battle/${battle.id}`);
         } catch (err) {
             console.error(err);
@@ -55,8 +56,25 @@ export default function BattleLobby() {
                     </div>
                 ) : (
                     <>
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center mb-8 shadow-neon-purple shadow-lg transform hover:scale-110 transition-transform duration-300">
+                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-red-500 to-orange-600 flex items-center justify-center mb-6 shadow-neon-purple shadow-lg transform hover:scale-110 transition-transform duration-300">
                             <Swords className="w-12 h-12 text-white" />
+                        </div>
+
+                        <div className="w-full mb-6">
+                            <label className="text-gray-400 text-sm mb-2 block font-bold text-left ml-1">SELECT BATTLEFIELD</label>
+                            <select
+                                className="w-full bg-black/40 border border-glass-border rounded-xl px-4 py-3 text-white focus:border-red-500 outline-none appearance-none"
+                                value={selectedSubject}
+                                onChange={(e) => setSelectedSubject(e.target.value)}
+                            >
+                                <option value="General Knowledge">General Knowledge</option>
+                                <option value="Mathematics">Mathematics</option>
+                                <option value="Science">Science</option>
+                                <option value="History">History</option>
+                                <option value="Geography">Geography</option>
+                                <option value="Computer Science">Computer Science</option>
+                                <option value="Literature">Literature</option>
+                            </select>
                         </div>
 
                         <div className="space-y-4 w-full">

@@ -24,6 +24,7 @@ export default function BattleArena() {
     const [timeLeft, setTimeLeft] = useState(5); // 5s freeze on wrong answer
     const [isFrozen, setIsFrozen] = useState(false);
     const [result, setResult] = useState(null); // win/loss
+    const [startingIn, setStartingIn] = useState(null); // null or number for countdown
 
     // Realtime subscription ref
     const channelRef = useRef(null);
@@ -56,7 +57,7 @@ export default function BattleArena() {
             }, (payload) => {
                 setBattle(prev => ({ ...prev, ...payload.new }));
                 if (payload.new.status === 'active' && gameState === 'waiting_opponent') {
-                    setGameState('active');
+                    startCountdown();
                 }
             })
             .subscribe();
@@ -73,7 +74,7 @@ export default function BattleArena() {
         if (battle) {
             // STRICT CHECK: Only active if BOTH players exist
             if (battle.opponent_id && battle.status === 'active') {
-                setGameState('active');
+                if (gameState !== 'active') startCountdown();
             } else if (battle.status === 'completed') {
                 finishGame(battle.winner_id === user.id);
             } else {
@@ -84,22 +85,40 @@ export default function BattleArena() {
 
     // ... (rest of code) ...
 
+    function startCountdown() {
+        setStartingIn(3);
+        const timer = setInterval(() => {
+            setStartingIn(prev => {
+                if (prev <= 1) {
+                    clearInterval(timer);
+                    setGameState('active');
+                    return null;
+                }
+                return prev - 1;
+            });
+        }, 1000);
+    }
+
     if (gameState === 'waiting_opponent') {
         return (
             <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-                <div className="relative mb-8">
-                    <div className="w-24 h-24 border-4 border-primary/30 rounded-full animate-ping absolute inset-0"></div>
-                    <div className="w-24 h-24 border-4 border-primary border-t-transparent rounded-full animate-spin"></div>
-                    <div className="absolute inset-0 flex items-center justify-center font-bold text-xl text-primary">VS</div>
+                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6"></div>
+                <h2 className="text-2xl font-bold text-white">Waiting for Opponent...</h2>
+                <p className="text-gray-400 mt-2">The battle will start automatically.</p>
+                <div className="mt-8 p-4 bg-white/5 rounded-lg text-sm text-gray-500">
+                    Room ID: {id}
                 </div>
-                <h2 className="text-3xl font-black text-white mb-2">SEARCHING FOR RIVAL</h2>
-                <p className="text-gray-400 max-w-md mx-auto">
-                    Waiting for a worthy opponent to join the arena.
-                    <br />
-                    <span className="text-xs text-gray-600 mt-2 block">Room ID: {id}</span>
-                </p>
+            </div>
+        );
+    }
 
-                {/* Optional: Add "Play against Bot" button here later if wait is too long */}
+    if (startingIn) {
+        return (
+            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center animate-pulse">
+                <h1 className="text-9xl font-black text-white drop-shadow-[0_0_30px_rgba(255,0,0,0.8)]">
+                    {startingIn}
+                </h1>
+                <p className="text-xl text-red-500 font-bold mt-4">GET READY!</p>
             </div>
         );
     }
@@ -187,18 +206,7 @@ export default function BattleArena() {
 
     if (!battle || !myProgress) return <div className="text-white text-center pt-20">Loading Arena...</div>;
 
-    if (gameState === 'waiting_opponent') {
-        return (
-            <div className="flex flex-col items-center justify-center min-h-[60vh] text-center">
-                <div className="w-16 h-16 border-4 border-primary border-t-transparent rounded-full animate-spin mb-6"></div>
-                <h2 className="text-2xl font-bold text-white">Waiting for Opponent...</h2>
-                <p className="text-gray-400 mt-2">The battle will start automatically.</p>
-                <div className="mt-8 p-4 bg-white/5 rounded-lg text-sm text-gray-500">
-                    Room ID: {id}
-                </div>
-            </div>
-        );
-    }
+
 
     if (gameState === 'finished') {
         return (
