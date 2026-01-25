@@ -143,8 +143,14 @@ export default function Shop() {
                                     {item.type === 'frame' ? (
                                         <div className="relative w-20 h-20">
                                             <div className={cn("absolute inset-0 rounded-full", item.value)}></div>
-                                            <div className="w-full h-full rounded-full overflow-hidden relative z-0 border-4 border-transparent">
-                                                <img src={profile?.avatar_url || 'https://via.placeholder.com/100'} className="w-full h-full object-cover" />
+                                            <div className="w-full h-full rounded-full overflow-hidden relative z-0 border-4 border-transparent bg-background-lighter flex items-center justify-center">
+                                                {profile?.avatar_url ? (
+                                                    <img src={profile.avatar_url} className="w-full h-full object-cover" />
+                                                ) : (
+                                                    <span className="text-2xl font-bold text-gray-400">
+                                                        {(profile?.username || 'U')[0].toUpperCase()}
+                                                    </span>
+                                                )}
                                             </div>
                                         </div>
                                     ) : item.type === 'title' ? (
