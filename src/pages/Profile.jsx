@@ -209,7 +209,7 @@ export default function Profile() {
 
                 <div className="flex flex-col md:flex-row items-center gap-8 relative z-10">
                     <div className="relative group">
-                        <div className="w-40 h-40 rounded-3xl bg-gradient-to-br from-primary via-accent to-secondary p-1 rotate-3 group-hover:rotate-0 transition-transform duration-500">
+                        <div className="w-40 h-40 relative rounded-3xl bg-gradient-to-br from-primary via-accent to-secondary p-1 rotate-3 group-hover:rotate-0 transition-transform duration-500">
                             <div className="w-full h-full rounded-[1.4rem] bg-background-lighter overflow-hidden flex items-center justify-center -rotate-3 group-hover:rotate-0 transition-transform duration-500 border border-white/10">
                                 {profile?.avatar_url ? (
                                     <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />

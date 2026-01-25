@@ -141,8 +141,9 @@ export default function Shop() {
                                 {/* Preview Area */}
                                 <div className="flex-1 flex items-center justify-center py-8 mb-4 bg-black/20 rounded-xl relative">
                                     {item.type === 'frame' ? (
-                                        <div className="relative">
-                                            <div className={cn("w-20 h-20 rounded-full border-4 overflow-hidden", item.value)}>
+                                        <div className="relative w-20 h-20">
+                                            <div className={cn("absolute inset-0 rounded-full", item.value)}></div>
+                                            <div className="w-full h-full rounded-full overflow-hidden relative z-0 border-4 border-transparent">
                                                 <img src={profile?.avatar_url || 'https://via.placeholder.com/100'} className="w-full h-full object-cover" />
                                             </div>
                                         </div>
