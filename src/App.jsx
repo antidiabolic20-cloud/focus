@@ -25,6 +25,8 @@ import BattleLobby from './pages/Battle/BattleLobby';
 import BattleArena from './pages/Battle/BattleArena';
 import Shop from './pages/Shop';
 
+import { FocusWarningModal } from './components/Focus/FocusWarningModal';
+
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
 import { FocusProvider } from './context/FocusContext';
@@ -35,6 +37,7 @@ function App() {
       <AuthProvider>
         <BrowserRouter>
           <FocusProvider>
+            <FocusWarningModal />
             <NotificationProvider>
               <Routes>
                 <Route path="/login" element={<Login />} />
