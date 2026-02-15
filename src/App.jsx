@@ -26,6 +26,7 @@ import BattleArena from './pages/Battle/BattleArena';
 import Shop from './pages/Shop';
 
 import { FocusWarningModal } from './components/Focus/FocusWarningModal';
+import { MobileFocusGuide } from './components/Focus/MobileFocusGuide';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
@@ -38,6 +39,7 @@ function App() {
         <BrowserRouter>
           <FocusProvider>
             <FocusWarningModal />
+            <MobileFocusGuide />
             <NotificationProvider>
               <Routes>
                 <Route path="/login" element={<Login />} />
