@@ -11,6 +11,8 @@ export function MobileFocusGuide() {
     const [platform, setPlatform] = useState('ios'); // 'ios' | 'android'
     const [step, setStep] = useState(0);
 
+    const [deferredPrompt, setDeferredPrompt] = useState(null);
+
     // Detect platform
     useEffect(() => {
         const userAgent = navigator.userAgent || navigator.vendor || window.opera;
@@ -19,6 +21,12 @@ export function MobileFocusGuide() {
         } else if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
             setPlatform('ios');
         }
+
+        // Listen for install prompt
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            setDeferredPrompt(e);
+        });
     }, []);
 
     // Open guide automatically when entering Focus Mode on mobile
@@ -28,40 +36,51 @@ export function MobileFocusGuide() {
         }
     }, [isFocusMode]);
 
+    const handleInstallClick = async () => {
+        if (!deferredPrompt) return;
+        deferredPrompt.prompt();
+        const { outcome } = await deferredPrompt.userChoice;
+        if (outcome === 'accepted') {
+            setDeferredPrompt(null);
+        }
+    };
+
     if (!isOpen) return null;
 
     const steps = {
         ios: [
+            {
+                title: "Install App",
+                desc: "Tap 'Share' (bottom) → 'Add to Home Screen' to install fullscreen.",
+                icon: <Smartphone className="w-8 h-8 text-primary" />,
+                isInstallStep: true
+            },
             {
                 title: "Enable Guided Access",
                 desc: "Go to Settings > Accessibility > Guided Access and turn it ON.",
                 icon: <Smartphone className="w-8 h-8 text-primary" />
             },
             {
-                title: "Open Passcode Settings",
-                desc: "Tap 'Passcode Settings' and set a Guided Access Passcode.",
-                icon: <Lock className="w-8 h-8 text-primary" />
-            },
-            {
                 title: "Lock This App",
-                desc: "Triple-click the side button (or home button) to start Guided Access.",
+                desc: "Triple-click the side button while in the app to lock it.",
                 icon: <Check className="w-8 h-8 text-green-400" />
             }
         ],
         android: [
+            {
+                title: "Install App",
+                desc: "Tap the button below to install the app for a better experience.",
+                icon: <Smartphone className="w-8 h-8 text-primary" />,
+                isInstallStep: true
+            },
             {
                 title: "Enable App Pinning",
                 desc: "Go to Settings > Security > Advanced > App Pinning and turn it ON.",
                 icon: <Smartphone className="w-8 h-8 text-green-400" />
             },
             {
-                title: "Open App Switcher",
-                desc: "Swipe up to see recent apps, then tap the icon above this app.",
-                icon: <Monitor className="w-8 h-8 text-green-400" />
-            },
-            {
                 title: "Pin This App",
-                desc: "Select 'Pin' from the menu. You are now locked in Focus Mode!",
+                desc: "Open App Switcher, tap the icon above this app, and select 'Pin'.",
                 icon: <Check className="w-8 h-8 text-primary" />
             }
         ]
@@ -112,13 +131,24 @@ export function MobileFocusGuide() {
                 </div>
 
                 {/* Steps Carousel */}
-                <div className="relative min-h-[180px]">
+                <div className="relative min-h-[220px]">
                     <div className="text-center space-y-4 animate-in slide-in-from-right duration-300" key={step}>
                         <div className="w-16 h-16 rounded-2xl bg-white/5 flex items-center justify-center mx-auto mb-4 border border-white/10">
                             {currentSteps[step].icon}
                         </div>
                         <h3 className="text-lg font-bold text-white">{currentSteps[step].title}</h3>
                         <p className="text-gray-400 text-sm px-4">{currentSteps[step].desc}</p>
+
+                        {currentSteps[step].isInstallStep && platform === 'android' && deferredPrompt && (
+                            <NeonButton onClick={handleInstallClick} className="mt-2 text-sm py-2">
+                                Add to Home Screen
+                            </NeonButton>
+                        )}
+                        {currentSteps[step].isInstallStep && platform === 'ios' && (
+                            <p className="text-xs text-primary mt-2 animate-pulse">
+                                ↑ Tap the Share button in your browser menu
+                            </p>
+                        )}
                     </div>
 
                     {/* Dots */}
