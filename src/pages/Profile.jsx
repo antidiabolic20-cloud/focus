@@ -8,10 +8,12 @@ import { shopService } from '../services/shopService';
 import { User, Mail, Award, Calendar, TrendingUp, Zap, Clock, ChevronRight, Shield } from 'lucide-react';
 import { cn } from '../lib/utils';
 import { UserBadge } from '../components/UI/UserBadge';
+import { useFocus } from '../context/FocusContext';
 
 export default function Profile() {
     const { id: profileId } = useParams();
     const { user: currentUser, profile: myProfile } = useAuth();
+    const { isFocusMode } = useFocus();
 
     const [profile, setProfile] = useState(null);
     const [isOwnProfile, setIsOwnProfile] = useState(false);
@@ -226,7 +228,7 @@ export default function Profile() {
                         </div>
                         <div className="absolute -bottom-2 -right-2 bg-background-lighter border border-glass-border rounded-xl px-3 py-1 shadow-xl">
                             <span className="text-xs font-bold text-primary-glow flex items-center gap-1">
-                                <Award className="w-3 h-3" /> LVL {profile?.level || 1}
+                                <Award className="w-3 h-3" /> {isFocusMode ? "Student" : `LVL ${profile?.level || 1}`}
                             </span>
                         </div>
                     </div>
@@ -277,7 +279,7 @@ export default function Profile() {
                                     <div className="flex flex-col items-start gap-1">
                                         <h2 className="text-4xl font-black text-[rgb(var(--text-main))] tracking-tight flex items-center gap-3">
                                             {profile?.username || 'Student'}
-                                            {equippedItems.title && (
+                                            {!isFocusMode && equippedItems.title && (
                                                 <span className="text-sm px-2 py-0.5 rounded-lg bg-gradient-to-r from-yellow-500/20 to-orange-500/20 border border-yellow-500/30 text-yellow-500 font-bold uppercase tracking-wider">
                                                     {equippedItems.title.value}
                                                 </span>
@@ -345,20 +347,22 @@ export default function Profile() {
                             </div>
                         )}
 
-                        <div className="max-w-md">
-                            <div className="flex justify-between items-end mb-2">
-                                <span className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
-                                    <Zap className="w-3 h-3 text-yellow-500 fill-current" /> XP Mastery
-                                </span>
-                                <span className="text-sm font-bold text-[rgb(var(--text-main))]">{profile?.xp || 0} / {((profile?.level || 1) * 100)} XP</span>
+                        {!isFocusMode && (
+                            <div className="max-w-md">
+                                <div className="flex justify-between items-end mb-2">
+                                    <span className="text-xs font-bold text-gray-500 uppercase tracking-widest flex items-center gap-1">
+                                        <Zap className="w-3 h-3 text-yellow-500 fill-current" /> XP Mastery
+                                    </span>
+                                    <span className="text-sm font-bold text-[rgb(var(--text-main))]">{profile?.xp || 0} / {((profile?.level || 1) * 100)} XP</span>
+                                </div>
+                                <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
+                                    <div
+                                        className="h-full bg-gradient-to-r from-primary via-accent to-secondary shadow-neon-purple transition-all duration-1000 ease-out"
+                                        style={{ width: `${(profile?.xp % 100) || 0}%` }}
+                                    ></div>
+                                </div>
                             </div>
-                            <div className="h-3 w-full bg-white/5 rounded-full overflow-hidden border border-white/5">
-                                <div
-                                    className="h-full bg-gradient-to-r from-primary via-accent to-secondary shadow-neon-purple transition-all duration-1000 ease-out"
-                                    style={{ width: `${(profile?.xp % 100) || 0}%` }}
-                                ></div>
-                            </div>
-                        </div>
+                        )}
                     </div>
                 </div>
             </GlassCard>

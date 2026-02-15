@@ -148,24 +148,29 @@ export function Topbar({ onMenuClick }) {
 
                 {user ? (
                     <div className="flex items-center gap-3 pl-3 md:pl-6 border-l border-glass-border">
-                        <div className="text-right hidden lg:block">
-                            <p className="text-sm font-medium text-[rgb(var(--text-main))]">{profile?.username || 'Student'}</p>
-                            <p className="text-xs text-primary">Level {profile?.level || 1}</p>
-                        </div>
-                        <Link to="/profile" className="w-9 h-9 md:w-10 md:h-10 rounded-full bg-gradient-to-tr from-primary to-secondary p-0.5 cursor-pointer hover:scale-105 transition-transform">
-                            <div className="w-full h-full rounded-full bg-background flex items-center justify-center overflow-hidden">
-                                {profile?.avatar_url ? (
-                                    <img src={profile.avatar_url} alt="User" className="w-full h-full object-cover" />
-                                ) : (
-                                    <div className="text-xs font-bold text-[rgb(var(--text-main))] uppercase">{profile?.username?.[0] || 'U'}</div>
-                                )}
+                        {!isFocusMode && (
+                            <div className="text-right hidden lg:block">
+                                <p className="text-sm font-medium text-[rgb(var(--text-main))]">{profile?.username || 'Student'}</p>
+                                <p className="text-xs text-primary">Level {profile?.level || 1}</p>
+                            </div>
+                        )}
+                        <Link to="/profile">
+                            <div className="w-10 h-10 rounded-full bg-gradient-to-br from-primary via-accent to-secondary p-0.5 cursor-pointer hover:scale-105 transition-transform shadow-lg shadow-primary/20">
+                                <div className="w-full h-full rounded-full bg-background-lighter overflow-hidden border border-white/10">
+                                    {profile?.avatar_url ? (
+                                        <img src={profile.avatar_url} alt="Profile" className="w-full h-full object-cover" />
+                                    ) : (
+                                        <div className="flex items-center justify-center h-full text-foreground font-bold text-lg">
+                                            {(profile?.username || 'U')[0].toUpperCase()}
+                                        </div>
+                                    )}
+                                </div>
                             </div>
                         </Link>
                     </div>
-                ) : (
-                    <div className="flex items-center gap-3 pl-6 border-l border-glass-border">
-                        <Link to="/login" className="text-sm font-medium text-gray-400 hover:text-[rgb(var(--text-main))]">Login</Link>
-                    </div>
+                ) : (<div className="flex items-center gap-3 pl-6 border-l border-glass-border">
+                    <Link to="/login" className="text-sm font-medium text-gray-400 hover:text-[rgb(var(--text-main))]">Login</Link>
+                </div>
                 )}
             </div>
         </header>

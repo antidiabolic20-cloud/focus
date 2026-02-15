@@ -8,9 +8,11 @@ import { Link } from 'react-router-dom';
 import { cn } from '../lib/utils';
 import { ActivityChart } from '../components/Analytics/ActivityChart';
 import { analyticsService } from '../services/analyticsService';
+import { useFocus } from '../context/FocusContext';
 
 export default function Home() {
     const { user, profile } = useAuth();
+    const { isFocusMode } = useFocus();
     const [popularTopics, setPopularTopics] = useState([]);
     const [upcomingTests, setUpcomingTests] = useState([]);
     const [activityData, setActivityData] = useState([]);
@@ -128,35 +130,42 @@ export default function Home() {
                     </div>
                 </GlassCard>
 
-                <GlassCard className="relative overflow-hidden group">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Trophy className="w-24 h-24 text-accent" />
-                    </div>
-                    <h3 className="text-gray-400 font-medium">Global Rank</h3>
-                    <div className="mt-4">
-                        <span className="text-4xl font-bold text-[rgb(var(--text-main))]">#{stats.rank}</span>
-                        <span className="text-gray-500 text-sm ml-2">by XP</span>
-                    </div>
-                    <p className="text-xs text-gray-400 mt-4">{user ? "Keep learning to improve!" : "Log in to see rank"}</p>
-                </GlassCard>
+                {!isFocusMode && (
+                    <>
+                        <GlassCard className="relative overflow-hidden group">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Trophy className="w-24 h-24 text-accent" />
+                            </div>
+                            <h3 className="text-gray-400 font-medium">Global Rank</h3>
+                            <div className="mt-4">
+                                <span className="text-4xl font-bold text-[rgb(var(--text-main))]">#{stats.rank}</span>
+                                <span className="text-gray-500 text-sm ml-2">by XP</span>
+                            </div>
+                            <p className="text-xs text-gray-400 mt-4">{user ? "Keep learning to improve!" : "Log in to see rank"}</p>
+                        </GlassCard>
 
-                <GlassCard className="relative overflow-hidden group bg-gradient-to-br from-red-900/20 to-orange-900/20 border-red-500/30">
-                    <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
-                        <Swords className="w-24 h-24 text-red-500" />
-                    </div>
-                    <h3 className="text-red-400 font-medium">Live Battle</h3>
-                    <div className="mt-4">
-                        <h4 className="text-white font-bold text-lg">1v1 Duel</h4>
-                        <p className="text-xs text-gray-400">Challenge others & steal XP</p>
-                    </div>
-                    <Link to="/battle" className="block mt-4">
-                        <NeonButton className="w-full text-sm bg-red-600 hover:bg-red-500 border-none">
-                            Fight Now
-                        </NeonButton>
-                    </Link>
-                </GlassCard>
+                        <GlassCard className="relative overflow-hidden group bg-gradient-to-br from-red-900/20 to-orange-900/20 border-red-500/30">
+                            <div className="absolute top-0 right-0 p-4 opacity-10 group-hover:opacity-20 transition-opacity">
+                                <Swords className="w-24 h-24 text-red-500" />
+                            </div>
+                            <h3 className="text-red-400 font-medium">Live Battle</h3>
+                            <div className="mt-4">
+                                <h4 className="text-white font-bold text-lg">1v1 Duel</h4>
+                                <p className="text-xs text-gray-400">Challenge others & steal XP</p>
+                            </div>
+                            <Link to="/battle" className="block mt-4">
+                                <NeonButton className="w-full text-sm bg-red-600 hover:bg-red-500 border-none">
+                                    Fight Now
+                                </NeonButton>
+                            </Link>
+                        </GlassCard>
+                    </>
+                )}
 
-                <GlassCard className="md:col-span-3 lg:col-span-1 p-6 relative overflow-hidden group">
+                <GlassCard className={cn(
+                    "p-6 relative overflow-hidden group",
+                    isFocusMode ? "md:col-span-3 lg:col-span-3" : "md:col-span-3 lg:col-span-1"
+                )}>
                     <div className="flex items-center justify-between mb-6">
                         <h3 className="text-[rgb(var(--text-main))] font-medium">Performance Trend</h3>
                         <Link to="/analytics" className="text-xs text-primary hover:text-primary-glow">Details</Link>
@@ -172,38 +181,59 @@ export default function Home() {
                 {/* Left Column (2/3) */}
                 <div className="lg:col-span-2 space-y-6">
                     <div className="flex items-center justify-between">
-                        <h2 className="text-xl font-bold text-[rgb(var(--text-main))]">Popular Discussions</h2>
-                        <Link to="/forums" className="text-sm text-primary hover:text-primary-glow transition-colors">View All</Link>
+                        <h2 className="text-xl font-bold text-[rgb(var(--text-main))]">
+                            {isFocusMode ? "Your Learning Path" : "Popular Discussions"}
+                        </h2>
+                        {!isFocusMode && <Link to="/forums" className="text-sm text-primary hover:text-primary-glow transition-colors">View All</Link>}
                     </div>
                     <div className="space-y-4">
-                        {popularTopics.length === 0 ? (
-                            <GlassCard className="p-4 text-center text-gray-400">
-                                No active discussions yet. Be the first to post!
+                        {isFocusMode ? (
+                            <GlassCard className="p-8 text-center">
+                                <h3 className="text-xl font-bold text-primary mb-2">Focus Mode Active</h3>
+                                <p className="text-gray-400">Social features like forums are hidden to keep you on track.</p>
+                                <div className="mt-6 flex justify-center gap-4">
+                                    <Link to="/tests">
+                                        <NeonButton className="flex items-center gap-2">
+                                            <Play className="w-4 h-4" /> Go to Tests
+                                        </NeonButton>
+                                    </Link>
+                                    <Link to="/focus">
+                                        <NeonButton variant="secondary" className="flex items-center gap-2">
+                                            <Zap className="w-4 h-4" /> Go to Dojo
+                                        </NeonButton>
+                                    </Link>
+                                </div>
                             </GlassCard>
-                        ) : popularTopics.map((topic, index) => (
-                            <Link key={topic.id} to={`/forums/${topic.id}`}>
-                                <GlassCard className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer group transition-all mb-4">
-                                    <div className="flex items-center gap-4">
-                                        <div className="w-10 h-10 rounded-lg bg-background-lighter flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
-                                            <MessageSquare className="w-5 h-5" />
-                                        </div>
-                                        <div>
-                                            <h4 className="font-medium text-[rgb(var(--text-main))] group-hover:text-primary transition-colors">{topic.title}</h4>
-                                            <span className={cn(
-                                                "text-xs px-2 py-0.5 rounded-full border bg-white/5 mt-1 inline-block",
-                                                "text-primary border-primary/20"
-                                            )}>
-                                                {topic.category?.name || 'General'}
-                                            </span>
-                                        </div>
-                                    </div>
-                                    <div className="flex items-center gap-4 text-gray-500 text-sm">
-                                        <span className="hidden sm:inline">{topic.author?.username}</span>
-                                        <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
-                                    </div>
+                        ) : (
+                            popularTopics.length === 0 ? (
+                                <GlassCard className="p-4 text-center text-gray-400">
+                                    No active discussions yet. Be the first to post!
                                 </GlassCard>
-                            </Link>
-                        ))}
+                            ) : popularTopics.map((topic, index) => (
+                                <Link key={topic.id} to={`/forums/${topic.id}`}>
+                                    <GlassCard className="flex items-center justify-between p-4 hover:bg-white/5 cursor-pointer group transition-all mb-4">
+                                        <div className="flex items-center gap-4">
+                                            <div className="w-10 h-10 rounded-lg bg-background-lighter flex items-center justify-center text-primary group-hover:scale-110 transition-transform">
+                                                <MessageSquare className="w-5 h-5" />
+                                            </div>
+                                            <div>
+                                                <h4 className="font-medium text-[rgb(var(--text-main))] group-hover:text-primary transition-colors">{topic.title}</h4>
+                                                <span className={cn(
+                                                    "text-xs px-2 py-0.5 rounded-full border bg-white/5 mt-1 inline-block",
+                                                    "text-primary border-primary/20"
+                                                )}>
+                                                    {topic.category?.name || 'General'}
+                                                </span>
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center gap-4 text-gray-500 text-sm">
+                                            <span className="hidden sm:inline">{topic.author?.username}</span>
+                                            <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                        </div>
+                                    </GlassCard>
+                                </Link>
+                            ))
+                        )}
                     </div>
                 </div>
 
