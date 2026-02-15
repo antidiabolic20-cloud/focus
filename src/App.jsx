@@ -27,43 +27,46 @@ import Shop from './pages/Shop';
 
 import { ThemeProvider } from './context/ThemeContext';
 import { NotificationProvider } from './context/NotificationContext';
+import { FocusProvider } from './context/FocusContext';
 
 function App() {
   return (
     <ThemeProvider>
       <AuthProvider>
-        <NotificationProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/login" element={<Login />} />
-              <Route path="/register" element={<Register />} />
+        <BrowserRouter>
+          <FocusProvider>
+            <NotificationProvider>
+              <Routes>
+                <Route path="/login" element={<Login />} />
+                <Route path="/register" element={<Register />} />
 
-              <Route path="/" element={<DashboardLayout />}>
-                <Route index element={<Home />} />
-                <Route path="forums" element={<ForumList />} />
-                <Route path="forums/create" element={<CreatePost />} />
-                <Route path="forums/:id" element={<ThreadView />} />
-                <Route path="groups" element={<GroupList />} />
-                <Route path="groups/:id" element={<GroupDetail />} />
-                <Route path="community" element={<Community />} />
-                <Route path="resources" element={<Resources />} />
-                <Route path="focus" element={<FocusDojo />} />
-                <Route path="study-buddy" element={<StudyBuddy />} />
-                <Route path="messages" element={<Messages />} />
-                <Route path="tests" element={<TestList />} />
-                <Route path="tests/:id" element={<TakeTest />} />
-                <Route path="results/:id" element={<TestResult />} />
-                <Route path="leaderboard" element={<Leaderboard />} />
-                <Route path="analytics" element={<Analytics />} />
-                <Route path="battle" element={<BattleLobby />} />
-                <Route path="battle/:id" element={<BattleArena />} />
-                <Route path="shop" element={<Shop />} />
-                <Route path="profile" element={<Profile />} />
-                <Route path="profile/:id" element={<Profile />} />
-              </Route>
-            </Routes>
-          </BrowserRouter>
-        </NotificationProvider>
+                <Route path="/" element={<DashboardLayout />}>
+                  <Route index element={<Home />} />
+                  <Route path="forums" element={<ForumList />} />
+                  <Route path="forums/create" element={<CreatePost />} />
+                  <Route path="forums/:id" element={<ThreadView />} />
+                  <Route path="groups" element={<GroupList />} />
+                  <Route path="groups/:id" element={<GroupDetail />} />
+                  <Route path="community" element={<Community />} />
+                  <Route path="resources" element={<Resources />} />
+                  <Route path="focus" element={<FocusDojo />} />
+                  <Route path="study-buddy" element={<StudyBuddy />} />
+                  <Route path="messages" element={<Messages />} />
+                  <Route path="tests" element={<TestList />} />
+                  <Route path="tests/:id" element={<TakeTest />} />
+                  <Route path="results/:id" element={<TestResult />} />
+                  <Route path="leaderboard" element={<Leaderboard />} />
+                  <Route path="analytics" element={<Analytics />} />
+                  <Route path="battle" element={<BattleLobby />} />
+                  <Route path="battle/:id" element={<BattleArena />} />
+                  <Route path="shop" element={<Shop />} />
+                  <Route path="profile" element={<Profile />} />
+                  <Route path="profile/:id" element={<Profile />} />
+                </Route>
+              </Routes>
+            </NotificationProvider>
+          </FocusProvider>
+        </BrowserRouter>
       </AuthProvider>
     </ThemeProvider>
   );

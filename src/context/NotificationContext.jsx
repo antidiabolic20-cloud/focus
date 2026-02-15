@@ -1,11 +1,13 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { supabase } from '../lib/supabase';
 import { useAuth } from './AuthContext';
+import { useFocus } from './FocusContext';
 
 const NotificationContext = createContext();
 
 export function NotificationProvider({ children }) {
     const { user } = useAuth();
+    const { isFocusMode } = useFocus();
     const [notifications, setNotifications] = useState([]);
     const [unreadCount, setUnreadCount] = useState(0);
     const [loading, setLoading] = useState(true);
@@ -19,24 +21,28 @@ export function NotificationProvider({ children }) {
 
         fetchNotifications();
 
-        // Realtime Subscription
-        const channel = supabase
-            .channel(`public:notifications:user_id=${user.id}`)
-            .on('postgres_changes', {
-                event: 'INSERT',
-                schema: 'public',
-                table: 'notifications',
-                filter: `user_id=eq.${user.id}`
-            }, (payload) => {
-                setNotifications(prev => [payload.new, ...prev]);
-                setUnreadCount(prev => prev + 1);
-            })
-            .subscribe();
+        // Realtime Subscription (Only if NOT in Focus Mode)
+        let channel = null;
+
+        if (!isFocusMode) {
+            channel = supabase
+                .channel(`public:notifications:user_id=${user.id}`)
+                .on('postgres_changes', {
+                    event: 'INSERT',
+                    schema: 'public',
+                    table: 'notifications',
+                    filter: `user_id=eq.${user.id}`
+                }, (payload) => {
+                    setNotifications(prev => [payload.new, ...prev]);
+                    setUnreadCount(prev => prev + 1);
+                })
+                .subscribe();
+        }
 
         return () => {
-            supabase.removeChannel(channel);
+            if (channel) supabase.removeChannel(channel);
         };
-    }, [user]);
+    }, [user, isFocusMode]);
 
     async function fetchNotifications() {
         try {

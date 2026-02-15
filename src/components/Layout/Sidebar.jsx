@@ -1,12 +1,14 @@
 import React from 'react';
 import { Logo } from '../UI/Logo';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy, Flame, Library, Headphones, Handshake, ShoppingBag } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy, Flame, Library, Headphones, Handshake, ShoppingBag, Target } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
+import { useFocus } from '../../context/FocusContext';
 
 export function Sidebar({ isOpen, onClose }) {
     const { signOut, streak } = useAuth();
+    const { isFocusMode, toggleFocusMode } = useFocus();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -15,21 +17,25 @@ export function Sidebar({ isOpen, onClose }) {
     };
 
     const navItems = [
-        { icon: LayoutDashboard, label: 'Dashboard', path: '/' },
-        { icon: Swords, label: 'Battle', path: '/battle' },
-        { icon: Users, label: 'Community', path: '/community' },
-        { icon: Mail, label: 'Messages', path: '/messages' },
-        { icon: BarChart2, label: 'Analytics', path: '/analytics' },
-        { icon: Trophy, label: 'Leaderboard', path: '/leaderboard' },
-        { icon: MessageSquare, label: 'Forums', path: '/forums' },
-        { icon: Users, label: 'Groups', path: '/groups' },
-        { icon: Library, label: 'Resources', path: '/resources' },
-        { icon: Headphones, label: 'Focus Dojo', path: '/focus' },
-        { icon: Handshake, label: 'Study Buddy', path: '/study-buddy' },
-        { icon: ShoppingBag, label: 'XP Shop', path: '/shop' },
-        { icon: FileText, label: 'Mock Tests', path: '/tests' },
-        { icon: User, label: 'Profile', path: '/profile' },
+        { icon: LayoutDashboard, label: 'Dashboard', path: '/', educational: true },
+        { icon: Swords, label: 'Battle', path: '/battle', educational: false },
+        { icon: Users, label: 'Community', path: '/community', educational: false },
+        { icon: Mail, label: 'Messages', path: '/messages', educational: false },
+        { icon: BarChart2, label: 'Analytics', path: '/analytics', educational: true },
+        { icon: Trophy, label: 'Leaderboard', path: '/leaderboard', educational: true },
+        { icon: MessageSquare, label: 'Forums', path: '/forums', educational: false },
+        { icon: Users, label: 'Groups', path: '/groups', educational: false },
+        { icon: Library, label: 'Resources', path: '/resources', educational: true },
+        { icon: Headphones, label: 'Focus Dojo', path: '/focus', educational: true },
+        { icon: Handshake, label: 'Study Buddy', path: '/study-buddy', educational: true },
+        { icon: ShoppingBag, label: 'XP Shop', path: '/shop', educational: false },
+        { icon: FileText, label: 'Mock Tests', path: '/tests', educational: true },
+        { icon: User, label: 'Profile', path: '/profile', educational: true },
     ];
+
+    const displayedItems = isFocusMode
+        ? navItems.filter(item => item.educational)
+        : navItems;
 
     return (
         <>
@@ -52,21 +58,53 @@ export function Sidebar({ isOpen, onClose }) {
                     </button>
                 </div>
 
-                {/* Streak Banner */}
+                {/* Focus Mode Toggle Banner */}
                 <div className="px-4 mb-2">
-                    <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-3 flex items-center gap-3">
-                        <div className="p-2 bg-orange-500/20 rounded-lg">
-                            <Flame className="w-5 h-5 text-orange-500 animate-pulse" />
+                    <button
+                        onClick={toggleFocusMode}
+                        className={cn(
+                            "w-full border rounded-xl p-3 flex items-center gap-3 transition-all",
+                            isFocusMode
+                                ? "bg-primary/20 border-primary shadow-[0_0_15px_rgba(var(--primary),0.3)]"
+                                : "bg-white/5 border-white/10 hover:bg-white/10"
+                        )}
+                    >
+                        <div className={cn(
+                            "p-2 rounded-lg transition-colors",
+                            isFocusMode ? "bg-primary text-white" : "bg-white/10 text-gray-400"
+                        )}>
+                            <Target className="w-5 h-5" />
                         </div>
-                        <div>
-                            <p className="text-xs text-gray-400 font-medium">Daily Streak</p>
-                            <p className="text-sm font-bold text-[rgb(var(--text-main))]">{streak} Days 🔥</p>
+                        <div className="text-left">
+                            <p className={cn(
+                                "text-sm font-bold",
+                                isFocusMode ? "text-white" : "text-gray-400"
+                            )}>Success Mode</p>
+                            <p className={cn(
+                                "text-[10px] font-medium",
+                                isFocusMode ? "text-primary-light" : "text-gray-500"
+                            )}>{isFocusMode ? "ON - Distractions Blocked" : "OFF"}</p>
                         </div>
-                    </div>
+                    </button>
                 </div>
 
+                {/* Streak Banner */}
+                {!isFocusMode && (
+                    <div className="px-4 mb-2">
+                        <div className="bg-gradient-to-r from-orange-500/20 to-red-500/20 border border-orange-500/30 rounded-xl p-3 flex items-center gap-3">
+                            <div className="p-2 bg-orange-500/20 rounded-lg">
+                                <Flame className="w-5 h-5 text-orange-500 animate-pulse" />
+                            </div>
+                            <div>
+                                <p className="text-xs text-gray-400 font-medium">Daily Streak</p>
+                                <p className="text-sm font-bold text-[rgb(var(--text-main))]">{streak} Days 🔥</p>
+                            </div>
+                        </div>
+                    </div>
+                )}
+
                 <nav className="flex-1 px-4 space-y-2 mt-4 overflow-y-auto custom-scrollbar">
-                    {navItems.map((item) => (
+                    {displayedItems.map((item) => (
                         <NavLink
                             key={item.path}
                             to={item.path}

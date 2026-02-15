@@ -56,6 +56,10 @@
     text-shadow: 0 0 10px rgba(59, 130, 246, 0.5);
   }
 
+  .box-shadow-neon {
+    box-shadow: 0 0 10px rgba(99, 102, 241, 0.5), 0 0 20px rgba(99, 102, 241, 0.3);
+  }
+
   /* Custom Scrollbar for Sidebar & Logic */
   .custom-scrollbar::-webkit-scrollbar {
     width: 4px;
