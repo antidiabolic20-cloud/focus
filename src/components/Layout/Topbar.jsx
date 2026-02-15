@@ -1,3 +1,10 @@
+import React, { useState } from 'react';
+import { useTheme } from '../../context/ThemeContext';
+import { Search, Bell, Menu, Sun, Moon, Check, MessageSquare, Info } from 'lucide-react';
+import { useAuth } from '../../context/AuthContext';
+import { useNotifications } from '../../context/NotificationContext';
+import { Link, useNavigate } from 'react-router-dom';
+import { cn } from '../../lib/utils';
 import { useFocus } from '../../context/FocusContext';
 
 export function Topbar({ onMenuClick }) {
