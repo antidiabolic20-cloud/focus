@@ -1,14 +1,14 @@
 import React from 'react';
 import { Logo } from '../UI/Logo';
 import { NavLink, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy, Flame, Library, Headphones, Handshake, ShoppingBag, Target } from 'lucide-react';
+import { LayoutDashboard, MessageSquare, FileText, User, Settings, LogOut, Users, Mail, X, BarChart2, Swords, Trophy, Flame, Library, Headphones, Handshake, ShoppingBag, Target, Smartphone, BookOpen } from 'lucide-react';
 import { cn } from '../../lib/utils';
 import { useAuth } from '../../context/AuthContext';
 import { useFocus } from '../../context/FocusContext';
 
 export function Sidebar({ isOpen, onClose }) {
     const { signOut, streak } = useAuth();
-    const { isFocusMode, toggleFocusMode } = useFocus();
+    const { isFocusMode, toggleFocusMode, setShowMobileGuide } = useFocus();
     const navigate = useNavigate();
 
     const handleLogout = async () => {
@@ -29,6 +29,7 @@ export function Sidebar({ isOpen, onClose }) {
         { icon: Headphones, label: 'Focus Dojo', path: '/focus', educational: true },
         { icon: Handshake, label: 'Study Buddy', path: '/study-buddy', educational: true },
         { icon: ShoppingBag, label: 'XP Shop', path: '/shop', educational: false },
+        { icon: BookOpen, label: 'Flashcards', path: '/flashcards', educational: true },
         { icon: FileText, label: 'Mock Tests', path: '/tests', educational: true },
         { icon: User, label: 'Profile', path: '/profile', educational: true },
     ];
@@ -87,6 +88,24 @@ export function Sidebar({ isOpen, onClose }) {
                         </div>
                     </button>
                 </div>
+
+                {/* Mobile Guide Button (Visible in Focus Mode) */}
+                {isFocusMode && (
+                    <div className="px-4 mb-2 animate-in slide-in-from-left duration-300 delay-100">
+                        <button
+                            onClick={() => setShowMobileGuide(true)}
+                            className="w-full border border-primary/30 rounded-xl p-3 flex items-center gap-3 bg-primary/10 hover:bg-primary/20 transition-all group"
+                        >
+                            <div className="p-2 rounded-lg bg-primary/20 text-primary group-hover:scale-110 transition-transform">
+                                <Smartphone className="w-5 h-5" />
+                            </div>
+                            <div className="text-left">
+                                <p className="text-sm font-bold text-white">Mobile Guide</p>
+                                <p className="text-[10px] font-medium text-primary-light">Install App & Lock Phone</p>
+                            </div>
+                        </button>
+                    </div>
+                )}
 
                 {/* Streak Banner */}
                 {!isFocusMode && (

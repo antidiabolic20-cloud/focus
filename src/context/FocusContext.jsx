@@ -10,6 +10,7 @@ export function FocusProvider({ children }) {
     });
 
     const [isWarningActive, setIsWarningActive] = useState(false);
+    const [showMobileGuide, setShowMobileGuide] = useState(false);
 
     const navigate = useNavigate();
     const location = useLocation();
@@ -112,7 +113,14 @@ export function FocusProvider({ children }) {
     }
 
     return (
-        <FocusContext.Provider value={{ isFocusMode, toggleFocusMode, isWarningActive, dismissWarning }}>
+        <FocusContext.Provider value={{
+            isFocusMode,
+            toggleFocusMode,
+            isWarningActive,
+            dismissWarning,
+            showMobileGuide,
+            setShowMobileGuide
+        }}>
             {children}
         </FocusContext.Provider>
     );

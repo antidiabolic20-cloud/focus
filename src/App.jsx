@@ -24,6 +24,8 @@ import Analytics from './pages/Analytics';
 import BattleLobby from './pages/Battle/BattleLobby';
 import BattleArena from './pages/Battle/BattleArena';
 import Shop from './pages/Shop';
+import FlashcardHub from './pages/Flashcards/FlashcardHub';
+import StudySession from './pages/Flashcards/StudySession';
 
 import { FocusWarningModal } from './components/Focus/FocusWarningModal';
 import { MobileFocusGuide } from './components/Focus/MobileFocusGuide';
@@ -65,6 +67,8 @@ function App() {
                   <Route path="battle" element={<BattleLobby />} />
                   <Route path="battle/:id" element={<BattleArena />} />
                   <Route path="shop" element={<Shop />} />
+                  <Route path="flashcards" element={<FlashcardHub />} />
+                  <Route path="flashcards/:id" element={<StudySession />} />
                   <Route path="profile" element={<Profile />} />
                   <Route path="profile/:id" element={<Profile />} />
                 </Route>

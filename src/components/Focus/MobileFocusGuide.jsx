@@ -6,8 +6,7 @@ import { Smartphone, Lock, X, Check, Monitor } from 'lucide-react'; // Removed A
 import { cn } from '../../lib/utils';
 
 export function MobileFocusGuide() {
-    const { isFocusMode } = useFocus();
-    const [isOpen, setIsOpen] = useState(false);
+    const { isFocusMode, showMobileGuide, setShowMobileGuide } = useFocus(); // Use context state
     const [platform, setPlatform] = useState('ios'); // 'ios' | 'android'
     const [step, setStep] = useState(0);
 
@@ -32,9 +31,9 @@ export function MobileFocusGuide() {
     // Open guide automatically when entering Focus Mode on mobile
     useEffect(() => {
         if (isFocusMode && window.innerWidth < 768) {
-            setIsOpen(true);
+            setShowMobileGuide(true);
         }
-    }, [isFocusMode]);
+    }, [isFocusMode, setShowMobileGuide]);
 
     const handleInstallClick = async () => {
         if (!deferredPrompt) return;
@@ -45,7 +44,7 @@ export function MobileFocusGuide() {
         }
     };
 
-    if (!isOpen) return null;
+    if (!showMobileGuide) return null; // Use context state
 
     const steps = {
         ios: [
@@ -92,7 +91,7 @@ export function MobileFocusGuide() {
         <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center bg-black/80 backdrop-blur-sm animate-in fade-in duration-300">
             <GlassCard className="w-full max-w-md m-4 p-6 relative overflow-hidden bg-background border-primary/20 shadow-[0_0_30px_rgba(0,0,0,0.5)]">
                 <button
-                    onClick={() => setIsOpen(false)}
+                    onClick={() => setShowMobileGuide(false)}
                     className="absolute top-4 right-4 p-2 text-gray-400 hover:text-white"
                 >
                     <X className="w-5 h-5" />
@@ -180,7 +179,7 @@ export function MobileFocusGuide() {
                             if (step < currentSteps.length - 1) {
                                 setStep(s => s + 1);
                             } else {
-                                setIsOpen(false);
+                                setShowMobileGuide(false);
                             }
                         }}
                     >
